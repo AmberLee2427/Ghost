@@ -105,8 +105,16 @@ To start using the plugin, enable it in your settings menu and insert an API key
     -   claude-3-opus-20240229
 -   Mistral AI's models
 -   Google Gemini Pro
--   OpenAI - gpt-3.5-turbo - gpt-3.5-turbo-1106 - gpt-4 - gpt-4-turbo-preview
-    These following models are added in this folk: - gpt-4-turbo - gpt-4-turbo-2024-04-09 - gpt-4o - gpt-4o-2024-05-13
+-   OpenAI
+    -   gpt-3.5-turbo
+    -   gpt-3.5-turbo-1106
+    -   gpt-4
+    -   gpt-4-turbo-preview
+    -   These following models are added in this folk:
+    -   gpt-4-turbo
+    -   gpt-4-turbo-2024-04-09
+    -   gpt-4o
+    -   gpt-4o-2024-05-13
 -   Any Openrouter provided models.
 
 ## Other Notes
