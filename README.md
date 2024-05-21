@@ -116,6 +116,7 @@ To start using the plugin, enable it in your settings menu and insert an API key
     -   gpt-3.5-turbo-1106
     -   gpt-4
     -   gpt-4-turbo-preview
+        These following models are added in this folk:
     -   gpt-4-turbo
     -   gpt-4-turbo-2024-04-09
     -   gpt-4o
@@ -134,6 +135,8 @@ Any ideas or support is highly appreciated :)
 
 If you have any bugs, improvements, or questions please create an issue or discussion!
 
-## Big thanks to the original project!
+## Big thanks to Longy2k and the original project! 🎉
+
+This link is for Longy2k, he deserves more than a coffee!
 
 <a href='https://ko-fi.com/K3K8PNYT8' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
