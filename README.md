@@ -8,24 +8,6 @@ Generate and brainstorm ideas while creating your notes using Large Language Mod
   <img src="README_images/eli5-example.png" alt="eli5_example">
 </p>
 
-## Breaking Changes
-
-### If you have <v2.0.0, please perform the following instructions:
-
-1. Go to `Options > Community plugins > BMO Chatbot` and uninstall the plugin.
-2. Re-install "BMO Chatbot"
-3. Restart Obsidian or toggle the plugin on/off to refresh.
-
-Or,
-
-1. Go to `Options > Community plugins` and click on the folder's icon:
-
- <img width="775" alt="Screenshot 2024-03-10 at 9 28 38 PM" src="https://github.com/longy2k/obsidian-bmo-chatbot/assets/40724177/62882d8d-77d9-4a46-88fc-4e6a9b1215fc">
-
-2. Close Obsidian completely.
-3. Find the `bmo-chatbot` folder and delete `data.json`.
-4. Restart Obsidian.
-
 ## Features
 
 -   **Interact with self-hosted Large Language Models (LLMs):** Use the REST API URLs provided to interact with self-hosted Large Language Models (LLMs) using [Ollama](https://ollama.ai) or [LM Studio](https://lmstudio.ai/).
@@ -49,29 +31,41 @@ Explore some models at [GPT4ALL](https://gpt4all.io/index.html) under the "Model
 
 ## How to activate the plugin
 
-Three methods:
-
-Obsidian Community plugins (**Recommended**):
-
-1. Search for "BMO Chatbot" in the Obsidian Community plugins.
-2. Enable "BMO Chatbot" in the settings.
+Install method:
 
 To activate the plugin from this repo:
 
 1. Navigate to the plugin's folder in your terminal.
-2. Run `npm install` to install any necessary dependencies for the plugin.
-3. Once the dependencies have been installed, run `npm run build` to build the plugin.
-4. Once the plugin has been built, it should be ready to activate.
 
-Install using Beta Reviewers Auto-update Tester ([BRAT](https://github.com/TfTHacker/obsidian42-brat)) - [Quick guide for using BRAT](https://tfthacker.com/Obsidian+Plugins+by+TfTHacker/BRAT+-+Beta+Reviewer's+Auto-update+Tool/Quick+guide+for+using+BRAT)
+```
+cd /path/to/your/obsidian-vault/.obsidian/plugins
+```
 
-1. Search for "Obsidian42 - BRAT" in the Obsidian Community plugins.
-2. Open the command palette and run the command `BRAT: Add a beta plugin for testing` (If you want the plugin version to be frozen, use the command `BRAT: Add a beta plugin with frozen version based on a release tag`.)
-3. Paste "https://github.com/longy2k/obsidian-bmo-chatbot".
-4. Click on "Add Plugin".
-5. After BRAT confirms the installation, in Settings go to the Community plugins tab.
-6. Refresh the list of plugins.
-7. Find the beta plugin you just installed and enable it.
+2. Clone the repository.
+
+```
+git clone https://github.com/NoguchiShigeki/MyBMO
+```
+
+3. Run `npm install` to install any necessary dependencies for the plugin.
+
+```
+cd MyBMO
+npm install
+```
+
+4. Once the dependencies have been installed, run `npm run build` or `npm run dev` to build the plugin.
+
+```
+npm run build
+```
+
+```
+npm run dev
+```
+
+5. Once the plugin has been built, it should be ready to activate.
+   Enable: 'Settings' > 'Community plugins' > 'Installed plugins' > 'MyBMO' > 'Enable'.
 
 ## Getting Started
 
@@ -111,16 +105,8 @@ To start using the plugin, enable it in your settings menu and insert an API key
     -   claude-3-opus-20240229
 -   Mistral AI's models
 -   Google Gemini Pro
--   OpenAI
-    -   gpt-3.5-turbo
-    -   gpt-3.5-turbo-1106
-    -   gpt-4
-    -   gpt-4-turbo-preview
-        These following models are added in this folk:
-    -   gpt-4-turbo
-    -   gpt-4-turbo-2024-04-09
-    -   gpt-4o
-    -   gpt-4o-2024-05-13
+-   OpenAI - gpt-3.5-turbo - gpt-3.5-turbo-1106 - gpt-4 - gpt-4-turbo-preview
+    These following models are added in this folk: - gpt-4-turbo - gpt-4-turbo-2024-04-09 - gpt-4o - gpt-4o-2024-05-13
 -   Any Openrouter provided models.
 
 ## Other Notes
