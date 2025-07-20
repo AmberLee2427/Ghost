@@ -10,18 +10,17 @@ import { addMessage } from './Message';
 
 // Commands
 export function executeCommand(input: string, settings: BMOSettings, plugin: BMOGPT) {
-  const command = input.split(' ')[0]; // Get the first word from the input
+  const command = input.split(' ')[0].toLowerCase(); // Get the first word from the input
 
   switch (command) {
-      case '/h':
       case '/help':
       case '/man':
       case '/manual':
       case '/commands':
           commandHelp(plugin, settings);
           break;
-      case '/m':
       case '/model':
+      case '/m':
       case '/models':
           return commandModel(input, settings, plugin);
       case '/p':
@@ -49,9 +48,7 @@ export function executeCommand(input: string, settings: BMOSettings, plugin: BMO
       case '/append':
           commandAppend(plugin, settings);
           break;
-      case '/save':
-          commandSave(plugin, settings);
-          break;
+      // Removed /save and /load commands - memory is now passively managed by brain
       case '/c':
       case '/clear':
           removeMessageThread(plugin, 0);
@@ -110,9 +107,9 @@ export function commandHelp(plugin: BMOGPT, settings: BMOSettings) {
   <p><code>/temp [VALUE]</code> - Change temperature range from 0 to 2.</p>
   <p><code>/ref on | off</code> - Turn on or off "reference current note".</p>
   <p><code>/append</code> - Append current chat history to current active note.</p>
-  <p><code>/save</code> - Save current chat history to a note.</p>
   <p><code>/clear</code> or <code>/c</code> - Clear chat history.</p>
-  <p><code>/stop</code> or <code>/s</code> - [STREAMING MODELS ONLY]: Stop fetching response.</p>`;
+  <p><code>/stop</code> or <code>/s</code> - [STREAMING MODELS ONLY]: Stop fetching response.</p>
+  <p><strong>Note:</strong> Memory is now passively managed by the brain system. No manual save/load required.</p>`;
 
   const messageContainer = document.querySelector('#messageContainer') as HTMLDivElement;
   const botMessageDiv = displayCommandBotMessage(plugin, settings, messageHistory, commandBotMessage);
@@ -604,164 +601,6 @@ export async function commandAppend(plugin: BMOGPT, settings: BMOSettings) {
   }
 }
 
-
-// `/save` to save current chat history to a note.
-export async function commandSave(plugin: BMOGPT, settings: BMOSettings) {
-
-  let folderName = settings.chatHistory.chatHistoryPath;
-  // Check if the folder exists, create it if not
-  if (!await plugin.app.vault.adapter.exists(folderName)) {
-    await plugin.app.vault.createFolder(folderName);
-  }
-  const baseFileName = 'Chat History';
-  const fileExtension = '.md';
-
-  if (folderName && !folderName.endsWith('/')) {
-    folderName += '/';
-  }
-  
-  // Create a datetime string to append to the file name
-  const now = new Date();
-  const dateTimeStamp = now.getFullYear() + '-' 
-                        + (now.getMonth() + 1).toString().padStart(2, '0') + '-' 
-                        + now.getDate().toString().padStart(2, '0') + ' ' 
-                        + now.getHours().toString().padStart(2, '0') + '-' 
-                        + now.getMinutes().toString().padStart(2, '0') + '-' 
-                        + now.getSeconds().toString().padStart(2, '0');
-
-  try {
-    let markdownContent = '';
-    const allFiles = plugin.app.vault.getFiles(); // Retrieve all files from the vault
-
-    // Retrieve model name
-    const modelNameElement = document.querySelector('#modelName') as HTMLHeadingElement;
-    let modelName = 'Unknown'; // Default model name
-    if (modelNameElement && modelNameElement.textContent) {
-        modelName = modelNameElement.textContent.replace('Model: ', '').toLowerCase();
-    }
-
-    const templateFile = allFiles.find(file => file.path.toLowerCase() === settings.chatHistory.templateFilePath.toLowerCase());
-
-    if (templateFile) {
-      let fileContent = await plugin.app.vault.read(templateFile);
-  
-      // Check if the file content has YAML front matter
-      if (/^---\s*[\s\S]*?---/.test(fileContent)) {
-          // Insert model name into existing front matter
-          fileContent = fileContent.replace(/^---/, `---\nmodel: ${modelName}`);
-      } else {
-          // Prepend new front matter
-          fileContent = `---
-  model: ${modelName}
----\n` + fileContent;
-      }
-      markdownContent += fileContent;
-  } else {
-      // YAML front matter
-      markdownContent += 
-      `---
-  model: ${modelName}
----\n`;
-  }
-
-    // Retrieve user and chatbot names
-    const userNames = document.querySelectorAll('.userName') as NodeListOf<HTMLHeadingElement>;
-
-    let userNameText = 'USER';
-    if (userNames.length > 0) {
-        const userNameNode = userNames[0];
-        Array.from(userNameNode.childNodes).forEach((node) => {
-            // Check if the node is a text node and its textContent is not null
-            if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-                userNameText = node.textContent.trim().toUpperCase();
-            }
-        });
-    }
-
-    const chatbotNames = document.querySelectorAll('.chatbotName') as NodeListOf<HTMLHeadingElement>;
-    const chatbotNameText = chatbotNames.length > 0 && chatbotNames[0].textContent ? chatbotNames[0].textContent.toUpperCase() : 'ASSISTANT';
-
-    // Check and read the JSON file
-    if (await plugin.app.vault.adapter.exists(filenameMessageHistoryJSON(plugin))) {
-      try {
-        const jsonContent = await plugin.app.vault.adapter.read(filenameMessageHistoryJSON(plugin));
-        const messages = JSON.parse(jsonContent);
-
-        // Filter out messages starting with '/', and the assistant's response immediately following it
-        let skipNext = false;
-        markdownContent += messages
-        .filter((messageHistory: { role: string; content: string; }, index: number, array: { role: string; content: string; }[]) => {
-          if (skipNext && messageHistory.role === 'assistant') {
-            skipNext = false;
-            return false;
-          }
-          if (messageHistory.content.startsWith('/') || messageHistory.content.includes('errorBotMessage')) {
-            // Check if next message is also from user and starts with '/' or if current assistant message contains "displayErrorBotMessage"
-            skipNext = (index + 1 < array.length && array[index + 1].role === 'assistant') || messageHistory.role === 'assistant';
-            return false;
-          }
-          return true;
-        })
-        .map((message: { role: string; content: string; }) => {
-          let roleText = message.role.toUpperCase();
-          roleText = roleText === 'USER' ? userNameText : roleText;
-          roleText = roleText === 'ASSISTANT' ? chatbotNameText : roleText;
-          return `###### ${roleText}\n${message.content}\n`;
-        })
-        .join('\n');
-
-          const commandBotMessage = '<p><strong>Message history saved.</strong></p>';
-
-          const messageContainer = document.querySelector('#messageContainer') as HTMLDivElement;
-          const botMessageDiv = displayCommandBotMessage(plugin, settings, messageHistory, commandBotMessage);
-          messageContainer.appendChild(botMessageDiv);
-
-      } catch (error) {
-        const messageContainer = document.querySelector('#messageContainer') as HTMLDivElement;
-        const botMessageDiv = displayCommandBotMessage(plugin, settings, messageHistory, error);
-        messageContainer.appendChild(botMessageDiv);
-        console.error('Error processing message history:', error);
-      }
-    }
-
-    let fileName = '';
-
-    if (settings.chatHistory.allowRenameNoteTitle) {
-      let uniqueNameFound = false;
-      let modelRenameTitle;
-
-      // Function to check if a file name already exists
-      const fileNameExists = (name: string | null) => {
-          return allFiles.some((file) => file.path === folderName + name + fileExtension);
-      };
-    
-      while (!uniqueNameFound) {
-          modelRenameTitle = await fetchModelRenameTitle(settings,  markdownContent);
-      
-          if (!fileNameExists(modelRenameTitle)) {
-              uniqueNameFound = true;
-          }
-      }
-
-      fileName = folderName + modelRenameTitle + fileExtension;
-      
-    }
-    else {
-      fileName = folderName + baseFileName + ' ' + dateTimeStamp + fileExtension;
-    }
-
-    // Create the new note with formatted Markdown content
-    const file = await plugin.app.vault.create(fileName, markdownContent);
-    if (file) {
-      new Notice('Saved conversation.');
-
-      // Open the newly created note in a new pane
-      plugin.app.workspace.openLinkText(fileName, '', true, { active: true });
-    }
-  } catch (error) {
-    console.error('Failed to create note:', error);
-  }
-}
 
 // `/stop` to stop fetching response
 export function commandStop() {

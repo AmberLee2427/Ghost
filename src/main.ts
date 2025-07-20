@@ -18,6 +18,7 @@ export interface BMOSettings {
 		max_tokens: string;
 		temperature: string;
 		allowReferenceCurrentNote: boolean;
+		memoryBackend: "sentence_transformers" | "txtai";  // New memory backend setting
 	};
 	appearance: {
 		userName: string;
@@ -126,6 +127,7 @@ export const DEFAULT_SETTINGS: BMOSettings = {
 		max_tokens: "",
 		temperature: "1.00",
 		allowReferenceCurrentNote: false,
+		memoryBackend: "sentence_transformers",
 	},
 	appearance: {
 		userName: "USER",

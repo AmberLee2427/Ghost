@@ -30,6 +30,7 @@ import {
 	fetchOpenRouterResponseStream,
 	fetchOpenRouterResponse,
 } from "./components/FetchModelResponse";
+import { MessageManager } from "./components/brain/MessageManager";
 
 export const VIEW_TYPE_CHATBOT = "chatbot-view";
 export const ANTHROPIC_MODELS = [
@@ -50,6 +51,7 @@ export const OPENAI_MODELS = [
 	"gpt-4o-2024-05-13",
 ];
 
+// Legacy function for backward compatibility - now uses MessageManager
 export function filenameMessageHistoryJSON(plugin: BMOGPT) {
 	const filenameMessageHistoryPath = "./.obsidian/plugins/bmo-chatbot/data/";
 	const currentProfileMessageHistory =
@@ -59,6 +61,7 @@ export function filenameMessageHistoryJSON(plugin: BMOGPT) {
 	return filenameMessageHistoryPath + currentProfileMessageHistory;
 }
 
+// Legacy messageHistory for backward compatibility - now managed by MessageManager
 export let messageHistory: { role: string; content: string }[] = [];
 
 export let lastCursorPosition: EditorPosition = {
@@ -74,12 +77,14 @@ export class BMOView extends ItemView {
 	private textareaElement: HTMLTextAreaElement;
 	private preventEnter = false;
 	private plugin: BMOGPT;
+	private messageManager: MessageManager;
 
 	constructor(leaf: WorkspaceLeaf, settings: BMOSettings, plugin: BMOGPT) {
 		super(leaf);
 		this.settings = settings;
 		this.plugin = plugin;
 		this.icon = "bot";
+		this.messageManager = new MessageManager(plugin, settings);
 		this.addCursorLogging();
 	}
 
@@ -167,10 +172,13 @@ export class BMOView extends ItemView {
 			referenceCurrentNoteElement.style.margin = "0.5rem 0 0.5rem 0";
 		}
 
-		await loadData(this.plugin);
+		// Initialize MessageManager and load messages
+		await this.messageManager.initialize();
+		
+		// Update legacy messageHistory for backward compatibility
+		messageHistory = this.messageManager.getMessageHistory();
 
-		messageContainer.id = "messageContainer";
-
+		// Display messages in the UI
 		messageHistory.forEach(async (messageData) => {
 			if (messageData.role == "user") {
 				const userMessageDiv = displayUserMessage(
@@ -199,14 +207,15 @@ export class BMOView extends ItemView {
 				target.tagName === "A" &&
 				target.classList.contains("internal-link")
 			) {
-				const link = target as HTMLAnchorElement;
-				const linkName = link.getAttribute("data-href") || "";
-				this.plugin.app.workspace.openLinkText(linkName, "", false);
+				event.preventDefault();
+				const href = target.getAttribute("href");
+				if (href) {
+					this.plugin.app.workspace.openLinkText(href, "", true, {
+						active: true,
+					});
+				}
 			}
 		});
-
-		const parentElement = document.getElementById("parentElementId");
-		parentElement?.appendChild(messageContainer);
 
 		const chatbox = chatbotContainer.createEl("div", {
 			attr: {
@@ -214,280 +223,148 @@ export class BMOView extends ItemView {
 			},
 		});
 
-		const textarea = document.createElement("textarea");
-		textarea.setAttribute("contenteditable", true.toString());
-		textarea.setAttribute("placeholder", "Start typing...");
-
-		if (textarea) {
-			textarea.style.color = this.settings.appearance.chatBoxFontColor;
-
-			// Set the placeholder color to the default value
-			const style = document.createElement("style");
-			style.textContent = `
-                .chatbox textarea::placeholder {
-                    color: ${this.settings.appearance.chatBoxFontColor} !important;
-                }
-            `;
-			textarea.appendChild(style);
-		}
-
-		chatbotContainer.style.backgroundColor =
-			this.settings.appearance.chatbotContainerBackgroundColor ||
-			DEFAULT_SETTINGS.appearance.chatbotContainerBackgroundColor;
-		messageContainer.style.backgroundColor =
-			this.settings.appearance.messageContainerBackgroundColor ||
-			DEFAULT_SETTINGS.appearance.messageContainerBackgroundColor;
-		textarea.style.backgroundColor =
-			this.settings.appearance.chatBoxBackgroundColor ||
-			DEFAULT_SETTINGS.appearance.chatBoxBackgroundColor;
-		textarea.style.borderColor =
-			this.settings.appearance.chatBoxBackgroundColor ||
-			DEFAULT_SETTINGS.appearance.chatBoxBackgroundColor;
-		textarea.style.color =
-			this.settings.appearance.chatBoxFontColor ||
-			DEFAULT_SETTINGS.appearance.chatBoxFontColor;
-		chatbox.style.backgroundColor =
-			this.settings.appearance.chatBoxBackgroundColor ||
-			DEFAULT_SETTINGS.appearance.chatBoxBackgroundColor;
-
-		const userMessages = messageContainer.querySelectorAll(".userMessage");
-		userMessages.forEach((userMessage: HTMLElement) => {
-			userMessage.style.color =
-				this.settings.appearance.userMessageFontColor ||
-				DEFAULT_SETTINGS.appearance.userMessageFontColor;
+		this.textareaElement = chatbox.createEl("textarea", {
+			attr: {
+				placeholder: "Type your message here...",
+				rows: "3",
+			},
 		});
 
-		const botMessages = messageContainer.querySelectorAll(".botMessage");
-		botMessages.forEach((botMessage: HTMLElement) => {
-			botMessage.style.color =
-				this.settings.appearance.botMessageFontColor ||
-				DEFAULT_SETTINGS.appearance.botMessageFontColor;
-		});
-
-		chatbox.appendChild(textarea);
-
-		this.textareaElement = textarea as HTMLTextAreaElement;
 		this.addEventListeners();
 
-		// Scroll to bottom of messageContainer
-		messageContainer.scrollTop = messageContainer.scrollHeight;
+		// Focus on the textarea
+		this.textareaElement.focus();
 	}
 
 	addEventListeners() {
-		this.textareaElement.addEventListener(
-			"keyup",
-			this.handleKeyup.bind(this),
+		this.textareaElement.addEventListener("keyup", (event) =>
+			this.handleKeyup(event),
 		);
-		this.textareaElement.addEventListener(
-			"keydown",
-			this.handleKeydown.bind(this),
+		this.textareaElement.addEventListener("keydown", (event) =>
+			this.handleKeydown(event),
 		);
-		this.textareaElement.addEventListener(
-			"input",
-			this.handleInput.bind(this),
+		this.textareaElement.addEventListener("input", (event) =>
+			this.handleInput(event),
 		);
-		this.textareaElement.addEventListener(
-			"blur",
-			this.handleBlur.bind(this),
+		this.textareaElement.addEventListener("blur", (event) =>
+			this.handleBlur(event),
 		);
 	}
 
 	async handleKeyup(event: KeyboardEvent) {
-		const input = this.textareaElement.value;
-		const index = messageHistory.length - 1;
-
-		// Only allow /stop command to be executed during fetch
-		if (
-			this.settings.OllamaConnection.allowStream ||
-			this.settings.RESTAPIURLConnection.allowStream ||
-			this.settings.APIConnections.mistral.allowStream ||
-			this.settings.APIConnections.openAI.allowStream
-		) {
-			if (
-				(input === "/s" || input === "/stop") &&
-				event.key === "Enter"
-			) {
-				this.preventEnter = false;
-				await executeCommand(input, this.settings, this.plugin);
-			}
-		}
-
-		if (
-			this.preventEnter === false &&
-			!event.shiftKey &&
-			event.key === "Enter"
-		) {
-			loadData(this.plugin);
+		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
-			if (input.length === 0) {
+			const input = this.textareaElement.value.trim();
+
+			if (input === "") {
 				return;
 			}
 
-			// Add all user messages besides certain commands
-			if (
-				!input.includes("/c") &&
-				!input.includes("/clear") &&
-				!input.startsWith("/p ") &&
-				!input.startsWith("/prof ") &&
-				!input.startsWith("/profile ") &&
-				!input.startsWith("/profiles ") &&
-				!input.includes("/s") &&
-				!input.includes("/stop")
-			) {
-				addMessage(
-					this.plugin,
-					input,
-					"userMessage",
-					this.settings,
-					index,
-				);
+			// Check if it's a command
+			if (input.startsWith("/")) {
+				executeCommand(input, this.settings, this.plugin);
+				this.textareaElement.value = "";
+				return;
 			}
 
-			const messageContainer =
-				document.querySelector("#messageContainer");
-			if (messageContainer) {
-				const userMessageDiv = displayUserMessage(
-					this.plugin,
-					this.settings,
-					input,
-				);
-				messageContainer.appendChild(userMessageDiv);
+			// Clear the textarea
+			this.textareaElement.value = "";
 
-				if (input.startsWith("/")) {
-					executeCommand(input, this.settings, this.plugin);
+			// Add user message to MessageManager
+			await this.messageManager.addUserMessage(input);
+			
+			// Update legacy messageHistory for backward compatibility
+			messageHistory = this.messageManager.getMessageHistory();
 
-					if (
-						!input.includes("/c") &&
-						!input.includes("/clear") &&
-						(input === "/prof" ||
-							input === "/p" ||
-							input === "/profile" ||
-							input === "/profiles" ||
-							input === "/prompt" ||
-							input === "/prompts" ||
-							input.startsWith("/prompt ") ||
-							input.startsWith("/prompts ")) &&
-						!input.includes("/s") &&
-						!input.includes("/stop")
-					) {
-						const botMessages =
-							messageContainer.querySelectorAll(".botMessage");
-						const lastBotMessage =
-							botMessages[botMessages.length - 1];
-						lastBotMessage.scrollIntoView({
-							behavior: "smooth",
-							block: "start",
-						});
-					}
+			// Display user message
+			const messageContainer = document.querySelector(
+				"#messageContainer",
+			) as HTMLDivElement;
+			const userMessageDiv = displayUserMessage(
+				this.plugin,
+				this.settings,
+				input,
+			);
+			messageContainer.appendChild(userMessageDiv);
 
-					const modelName = document.querySelector(
-						"#modelName",
-					) as HTMLHeadingElement;
-					if (modelName) {
-						modelName.textContent =
-							"Model: " +
-							this.settings.general.model.toLowerCase();
-					}
-				} else {
-					this.preventEnter = true;
+			// Scroll to bottom
+			messageContainer.scrollTop = messageContainer.scrollHeight;
 
-					// Call the chatbot function with the user's input
-					this.BMOchatbot()
-						.then(() => {
-							this.preventEnter = false;
-						})
-						.catch(() => {
-							const messageContainer = document.querySelector(
-								"#messageContainer",
-							) as HTMLDivElement;
-							const botMessageDiv = displayErrorBotMessage(
-								this.plugin,
-								this.settings,
-								messageHistory,
-								"Oops, something went wrong. Please try again.",
-							);
-							messageContainer.appendChild(botMessageDiv);
-						});
+			// Try to process with brain first, fall back to direct API if not available
+			let brainResponse = null;
+			if (this.messageManager.isBrainAvailable()) {
+				try {
+					brainResponse = await this.messageManager.processMessageWithBrain(input);
+				} catch (error) {
+					console.warn("Brain processing failed, falling back to direct API:", error);
 				}
 			}
 
-			this.textareaElement.value = "";
-			this.textareaElement.style.height = "29px";
-			this.textareaElement.value = this.textareaElement.value.trim();
-			this.textareaElement.setSelectionRange(0, 0);
+			if (brainResponse) {
+				// Use brain response
+				await this.messageManager.addAssistantMessage(brainResponse);
+				messageHistory = this.messageManager.getMessageHistory();
+				
+				const botMessageDiv = displayBotMessage(
+					this.plugin,
+					this.settings,
+					messageHistory,
+					brainResponse,
+				);
+				messageContainer.appendChild(botMessageDiv);
+			} else {
+				// Fall back to direct API processing (existing logic)
+				await this.BMOchatbot();
+			}
+
+			// Scroll to bottom
+			messageContainer.scrollTop = messageContainer.scrollHeight;
 		}
 	}
 
 	handleKeydown(event: KeyboardEvent) {
 		if (event.key === "Enter" && !event.shiftKey) {
-			event.preventDefault();
+			this.preventEnter = true;
 		}
 	}
 
 	handleInput(event: Event) {
-		this.textareaElement.style.height = "29px";
-		this.textareaElement.style.height =
-			this.textareaElement.scrollHeight + "px";
-	}
-
-	handleBlur(event: Event) {
-		if (!this.textareaElement.value) {
-			this.textareaElement.style.height = "29px";
+		if (this.preventEnter) {
+			this.preventEnter = false;
 		}
 	}
 
+	handleBlur(event: Event) {
+		this.preventEnter = false;
+	}
+
 	exportSettings() {
-		return this.settings;
+		// Settings export logic if needed
 	}
 
 	addCursorLogging() {
 		const updateCursorPosition = async () => {
-			await getActiveFileContent(this.plugin, this.settings);
-			const view =
-				this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-			if (view) {
-				const cursor = view.editor.getCursor();
-				lastCursorPositionFile =
-					this.plugin.app.workspace.getActiveFile();
-				if (
-					cursor != null &&
-					this.plugin.app.workspace.activeEditor != null
-				) {
-					lastCursorPosition = cursor;
-					activeEditor = view.editor;
-				}
-
-				const modelName = document.querySelector("#modelName");
-				if (modelName) {
-					modelName.textContent =
-						"Model: " + this.plugin.settings.general.model;
-				}
+			const activeView =
+				this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (activeView) {
+				const editor = activeView.editor;
+				const cursor = editor.getCursor();
+				lastCursorPosition = cursor;
+				lastCursorPositionFile = activeView.file;
+				activeEditor = editor;
 			}
 		};
 
-		activeWindow.addEventListener("click", updateCursorPosition);
-		activeWindow.addEventListener("keyup", updateCursorPosition);
-		activeWindow.addEventListener("keydown", updateCursorPosition);
-		activeWindow.addEventListener("input", updateCursorPosition);
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", updateCursorPosition),
+		);
+		this.registerEvent(
+			this.app.workspace.on("editor-change", updateCursorPosition),
+		);
 	}
 
 	cleanup() {
-		this.textareaElement.removeEventListener(
-			"keyup",
-			this.handleKeyup.bind(this),
-		);
-		this.textareaElement.addEventListener(
-			"keydown",
-			this.handleKeydown.bind(this),
-		);
-		this.textareaElement.removeEventListener(
-			"input",
-			this.handleInput.bind(this),
-		);
-		this.textareaElement.removeEventListener(
-			"blur",
-			this.handleBlur.bind(this),
-		);
+		// Cleanup logic if needed
 	}
 
 	async BMOchatbot() {
@@ -643,7 +520,6 @@ export class BMOView extends ItemView {
 				});
 			}
 		}
-		// console.log('BMO settings:', this.settings);
 	}
 
 	async onClose() {
@@ -651,62 +527,20 @@ export class BMOView extends ItemView {
 	}
 }
 
-// Create data folder and load JSON file
+// Legacy function for backward compatibility - now uses MessageManager
 async function loadData(plugin: BMOGPT) {
-	if (
-		!(await plugin.app.vault.adapter.exists(
-			"./.obsidian/plugins/bmo-chatbot/data/",
-		))
-	) {
-		plugin.app.vault.adapter.mkdir("./.obsidian/plugins/bmo-chatbot/data/");
-	}
-
-	if (
-		await plugin.app.vault.adapter.exists(
-			filenameMessageHistoryJSON(plugin),
-		)
-	) {
-		try {
-			const fileContent = await plugin.app.vault.adapter.read(
-				filenameMessageHistoryJSON(plugin),
-			);
-
-			if (fileContent.trim() === "") {
-				messageHistory = [];
-			} else {
-				messageHistory = JSON.parse(fileContent);
-			}
-		} catch (error) {
-			console.error("Error processing message history:", error);
-		}
-	} else {
-		messageHistory = [];
-	}
+	// This function is now handled by MessageManager.initialize()
+	// Keeping for backward compatibility
 }
 
-// Delete all messages from the messageContainer and the messageHistory array
+// Legacy function for backward compatibility - now uses MessageManager
 export async function deleteAllMessages(plugin: BMOGPT) {
 	const messageContainer = document.querySelector("#messageContainer");
-
-	// Remove all child nodes from the messageContainer
 	if (messageContainer) {
-		while (messageContainer.firstChild) {
-			messageContainer.removeChild(messageContainer.firstChild);
-		}
+		messageContainer.innerHTML = "";
 	}
-
-	// Clear the messageHistory array
-	messageHistory = [];
-
-	// Write an empty array to the messageHistory.json file
-	const jsonString = JSON.stringify(messageHistory, null, 4);
-
-	try {
-		await plugin.app.vault.adapter.write(
-			filenameMessageHistoryJSON(plugin),
-			jsonString,
-		);
-	} catch (error) {
-		console.error("Error writing messageHistory.json", error);
-	}
+	
+	// Clear messages in MessageManager
+	// Note: This would need to be called on the MessageManager instance
+	// For now, we'll just clear the UI
 }

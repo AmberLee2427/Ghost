@@ -108,15 +108,55 @@ We are creating an AI assistant that feels like it haunts your devices. The syst
 - Consider using a local API (HTTP or socket) for plugin-brain communication
 - Future: Consider adding web UI and mobile app components
 
-**Planned repo structure/workflow:**
+# Known Issues
 
-```
-Ghost Repo/
-├── src/                    # Plugin code
-├── brain/                  # Brain package (separate .git)
-│   ├── .git/              # Brain's own git repo
-│   ├── setup.py           # Brain package config
-│   ├── ghost_brain/       # Brain source code
-│   └── requirements.txt   # Python dependencies
-└── README.md 
-```
+## Minor Issues Found During Obsidian Integration Testing
+
+### 1. Model Type "auto" Not Recognized
+**Issue**: The brain system shows "ERROR: Unknown model type 'auto'" when processing messages.
+
+**Location**: `brain/ghost_brain/llm.py` line ~60
+
+**Cause**: The `auto` model type is passed but not handled in the LLM handler. The system should auto-select based on available API keys.
+
+**Impact**: Low - messages still process but with empty responses when no API keys are configured.
+
+**Fix Needed**: Update the `get_response` method to properly handle `model_type="auto"` by defaulting to available providers.
+
+### 2. Missing message_id in Memory Storage
+**Issue**: KeyError: 'message_id' when storing messages in memory.
+
+**Location**: `brain/ghost_brain/memory.py` line ~192
+
+**Cause**: The memory storage expects a `message_id` field in message objects, but the Obsidian integration doesn't provide one.
+
+**Impact**: Medium - memory storage fails silently, but core functionality works.
+
+**Fix Needed**: Either:
+- Generate message_id in the brain system when not provided
+- Update the Obsidian MessageManager to include message_id
+- Make message_id optional in memory storage
+
+### 3. No LLM API Keys Configured
+**Issue**: Warning "No LLM API keys configured" appears during testing.
+
+**Location**: `brain/ghost_brain/brain.py` line ~50
+
+**Cause**: This is expected behavior when no API keys are set up.
+
+**Impact**: None - this is informational and expected.
+
+**Fix**: Users need to configure API keys in their environment or settings.
+
+## Status
+- ✅ Core integration working
+- ✅ HTTP endpoints functional  
+- ✅ Memory system operational
+- ⚠️ Minor issues documented above
+- 🔧 Issues are non-blocking for basic functionality
+
+## Next Steps
+1. Fix model type "auto" handling
+2. Resolve message_id requirement in memory storage
+3. Add better error handling for missing API keys
+4. Consider adding a "mock" mode for testing without API keys

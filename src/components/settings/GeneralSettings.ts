@@ -132,6 +132,23 @@ export async function addGeneralSettings(containerEl: HTMLElement, plugin: BMOGP
             })
         );
 
+    new Setting(settingsContainer)
+        .setName('Memory Backend')
+        .setDesc('Choose the memory backend for conversation history and RAG capabilities. sentence-transformers is lightweight and fast, while txtai provides advanced features like citations.')
+        .addDropdown((dropdown) => {
+            dropdown
+                .addOption('sentence_transformers', 'sentence-transformers (Lightweight)')
+                .addOption('txtai', 'txtai (Advanced with Citations)')
+                .setValue(plugin.settings.general.memoryBackend)
+                .onChange(async (value) => {
+                    plugin.settings.general.memoryBackend = value as "sentence_transformers" | "txtai";
+                    await plugin.saveSettings();
+                    
+                    // Show a notice about the change
+                    new Notice(`Memory backend switched to ${value}. Restart the brain to apply changes.`);
+                });
+        });
+
     function descLink(text: string, link: string): DocumentFragment {
         const frag = new DocumentFragment();
         const desc = document.createElement('span');

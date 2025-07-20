@@ -3,6 +3,7 @@ import { displayAppendButton, displayBotCopyButton, displayBotEditButton } from 
 import BMOGPT, { BMOSettings } from 'src/main';
 
 // Add a new message to the messageHistory array and save it to the file
+// This function is now primarily for backward compatibility
 export async function addMessage(plugin: BMOGPT, input: string, messageType: 'userMessage' | 'botMessage', settings: BMOSettings, index: number) {
     const messageObj: { role: string; content: string } = {
         role: '',
@@ -26,9 +27,6 @@ export async function addMessage(plugin: BMOGPT, input: string, messageType: 'us
         buttonContainerDiv.className = 'button-container';
         botMessageToolBarDiv?.appendChild(buttonContainerDiv);
 
-        // const newBotP = document.createElement('p');
-        // newBotP.innerHTML = messageObj.content;
-        
         if (!messageObj.content.includes('commandBotMessage') && !messageObj.content.includes('errorBotMessage')) {
             const editButton = displayBotEditButton(plugin, messageObj.content);
             const copyBotButton = displayBotCopyButton(settings, messageObj.content);
@@ -37,7 +35,6 @@ export async function addMessage(plugin: BMOGPT, input: string, messageType: 'us
             buttonContainerDiv.appendChild(copyBotButton);
             buttonContainerDiv.appendChild(appendButton);
         }
-
     }
 
     messageHistory.splice(index+1, 0, messageObj);
