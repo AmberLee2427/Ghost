@@ -2,6 +2,29 @@
 
 An intelligent AI assistant that provides consistent, context-aware interactions across Discord and Obsidian, with local memory management and RAG capabilities.
 
+## ☕ Support Our Work
+
+If Ghost helps you, consider supporting its development:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+
+**Suggested amounts:**
+- **$5** - Fuel our coding sessions with caffeine ☕
+- **$25** - Power our AI development tools 🤖
+- **$75** - Supercharge our entire dev toolkit 🚀
+
+*Your support helps us continue building useful tools and explore new ways of making your life easier.*
+
+### Support the Original Creators
+
+Ghost is built on the excellent work of these developers:
+
+**Nexus AI Chat Importer** by Akim Sissaoui:
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexusplugins)
+
+**MyBMO (Original BMO)** by Longy2k:
+<a href='https://ko-fi.com/K3K8PNYT8' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
 ## Overview
 
 Ghost consists of three modular components working together:
@@ -165,12 +188,34 @@ Ghost consists of three modular components working together:
 
 This project is in active development. Contributions are welcome!
 
-## License
+## Credits
 
-MIT License - see LICENSE file for details.
+### Chat History Integration
+Ghost's chat history embedding feature is built on the excellent work of:
 
-## Acknowledgments
+**[Nexus AI Chat Importer](https://github.com/superkikim/nexus-ai-chat-importer)** by [Akim Sissaoui](https://ko-fi.com/nexusplugins)
 
-- Built on the foundation of MyBMO (original by Longy2k)
+This Obsidian plugin provides the foundation for importing and organizing ChatGPT conversations. Ghost extends this capability by embedding these conversations into semantic memory for intelligent search and context retrieval.
+
+### Foundation
+Ghost is built on the foundation of:
+
+**[MyBMO](https://github.com/NoguchiShigeki/MyBMO)** by NoguchiShigeki
+
+A repackaged version of the original BMO chatbot with enhancements. We forked from this version and significantly refactored it into Ghost.
+
+**Original BMO**: **[obsidian-bmo-chatbot](https://github.com/longy2k/obsidian-bmo-chatbot)** by [Longy2k](https://ko-fi.com/K3K8PNYT8)
+
+The original BMO chatbot plugin for Obsidian that started it all.
+
+### Other Acknowledgments
 - Uses txtai for RAG capabilities
 - Inspired by the need for intelligent, cross-platform AI assistants
+
+## License
+
+MIT License - see [LICENSE](https://github.com/AmberLee2427/Ghost/blob/main/LICENSE) file for details.
+
+* [MyBMO License](https://github.com/NoguchiShigeki/MyBMO/blob/main/LICENSE)
+* [obsidian-bmo-chatbot license](https://github.com/longy2k/obsidian-bmo-chatbot/blob/main/LICENSE)
+* [nexus-ai-chat-importer license](https://github.com/Superkikim/nexus-ai-chat-importer/blob/1.1.0/LICENSE.md)
