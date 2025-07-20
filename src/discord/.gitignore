@@ -1,0 +1,10 @@
+# Ignore keys
+.env
+
+# Ignore personal files
+amber.txt
+dylan.txt
+
+# Ignore memory files
+memory.db
+__pycache__/

@@ -1,0 +1,18 @@
+name: docs
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - run: |
+          pip install -U pip wheel
+          pip install .[all,dev]
+      - run: mkdocs gh-deploy --force
+ 

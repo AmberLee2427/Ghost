@@ -1,15 +1,15 @@
 {
-	"name": "my-bmo-chatbot",
-	"version": "2.0.0",
-	"description": "Generate and brainstorm ideas while creating your notes using Large Language Models (LLMs) from Ollama, LM Studio, Anthropic, OpenAI, Mistral AI, and more for Obsidian.",
+	"name": "ghost-ai",
+	"version": "0.0.0",
+	"description": "An intelligent AI assistant that provides consistent, context-aware interactions across Discord and Obsidian, with local memory management and RAG capabilities.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": ["obsidian", "ai", "assistant", "discord", "rag", "memory"],
+	"author": "Ghost Project Team",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/marked": "^4.0.8",

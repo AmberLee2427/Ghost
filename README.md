@@ -1,136 +1,149 @@
-# BMO Chatbot for Obsidian
+# Ghost - AI Assistant That Haunts Your Devices
 
-Generate and brainstorm ideas while creating your notes using Large Language Models (LLMs) from Ollama, LM Studio, Anthropic, OpenAI, Mistral AI, and more for Obsidian.
+An intelligent AI assistant that provides consistent, context-aware interactions across Discord and Obsidian, with local memory management and RAG capabilities.
 
-<p align="center">
-  <img src="README_images/original-example.png" alt="original_example">
-  <img src="README_images/dataview-example.png" alt="dataview_example">
-  <img src="README_images/eli5-example.png" alt="eli5_example">
-</p>
+## Overview
+
+Ghost consists of three modular components working together:
+
+- **Obsidian Plugin**: Settings hub and credential manager
+- **Shared Brain**: Python-based intelligence with memory and RAG
+- **Discord Bot**: Communication layer for cross-device statefulness
 
 ## Features
 
--   **Interact with self-hosted Large Language Models (LLMs):** Use the REST API URLs provided to interact with self-hosted Large Language Models (LLMs) using [Ollama](https://ollama.ai) or [LM Studio](https://lmstudio.ai/).
--   **Profiles:** Create chatbots with specific knowledge, personalities, and presets.
--   **Chat from anywhere in Obsidian:** Chat with your bot from anywhere within Obsidian.
--   **Chat with current note:** Use your chatbot to reference and engage within your current note.
--   **Chatbot renders in Obsidian Markdown:** Receive formatted responses in Obsidian Markdown for consistency.
--   **Customizable bot name:** Personalize the chatbot's name.
--   **Prompt Select Generate:** Prompt, select, and generate within your editor.
--   **Save current chat history as markdown:** Use the `/save` command in chat to save current conversation.
+### Obsidian Integration
+- **Settings Management**: Centralized configuration for API keys, Discord tokens, and system prompts
+- **Smart Chat UI**: Displays last 20 messages with intelligent context management (no manual `/save`/`/load`)
+- **Credential Storage**: Secure storage of all authentication tokens
+- **Brain Installer**: Manages Python dependencies and brain component updates
 
-## Requirements
+### Discord Bot
+- **Cross-Device Statefulness**: Consistent memory across all your devices
+- **Multiple Personalities**: Configurable bot personas and triggers
+- **Advanced Memory**: Local SQLite database with conversation history and embeddings
+- **Rich Interactions**: Support for threads, attachments, mentions, and reactions
 
-If you want to interact with self-hosted Large Language Models (LLMs) using [Ollama](https://ollama.ai) or [LM Studio](https://lmstudio.ai/), you will need to have the self-hosted API set up and running. You can follow the instructions provided by the self-hosted API provider to get it up and running. Once you have the REST API URL for your self-hosted API, you can use it with this plugin to interact with your models.
+### Shared Intelligence
+- **RAG System**: Semantic search with citations using txtai
+- **Local Memory**: SQLite database with FAISS similarity search
+- **Unified LLM Interface**: Support for OpenAI, Google, and other models
+- **Intelligent Context**: Automatic chunking and context management
 
-Access to other models may require an API key.
+## Installation
 
-Please see [instructions](https://github.com/longy2k/obsidian-bmo-chatbot/wiki) to setup with other LLMs providers.
+### Prerequisites
+- Obsidian (for the plugin)
+- Python 3.8+ (for the brain and Discord bot)
+- Discord Bot Token (for cross-device functionality)
 
-Explore some models at [GPT4ALL](https://gpt4all.io/index.html) under the "Model Explorer" section or [Ollama's Library](https://ollama.ai/library).
+### Setup
+1. Install the Obsidian plugin
+2. Configure your API keys and Discord token in the plugin settings
+3. The plugin will automatically install and manage the Python brain components
+4. Start the Discord bot through the plugin interface
 
-## How to activate the plugin
+## Configuration
 
-Install method:
+### API Keys
+- **OpenAI**: For GPT models
+- **Google**: For Gemini models  
+- **Discord**: For cross-device bot functionality
 
-To activate the plugin from this repo:
+### System Prompts
+- Configure custom system prompts for different use cases
+- Set personality and behavior parameters
+- Define conversation styles and expertise areas
 
-1. Navigate to the plugin's folder in your terminal.
+## Usage
+
+### In Obsidian
+1. Open the Ghost panel in the sidebar
+2. Start chatting - context is managed automatically
+3. No need for `/save` or `/load` commands
+4. Chat history is intelligently maintained
+
+### On Discord
+1. Mention the bot or reply to its messages
+2. Use keyword triggers for specific interactions
+3. Bot maintains context across conversations
+4. Access the same intelligence as Obsidian
+
+## Architecture
 
 ```
-cd /path/to/your/obsidian-vault/.obsidian/plugins
+┌─────────────────────────────────────────────────────────────┐
+│                    Obsidian Plugin                          │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
+│  │   Settings UI   │  │   Chat UI       │  │  Brain       │ │
+│  │   (Credentials) │  │   (Frontend     │  │  Installer   │ │
+│  │   • API Keys    │  │   Only)         │  │  • txtai     │ │
+│  │   • Discord     │  │   • Last 20     │  │  • Memory    │ │
+│  │   • System      │  │   • No /save    │  │  • Discord   │ │
+│  │   • Prompts     │  │   • Smart       │  │  • Bot       │ │
+│  └─────────────────┘  │   Context       │  └──────────────┘ │
+│                       └─────────────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────┐
+                    │   Shared Brain  │
+                    │   (Python)      │
+                    │   • txtai RAG   │
+                    │   • Citations   │
+                    │   • Memory DB   │
+                    │   • LLM Handler │
+                    └─────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────┐
+                    │   Discord Bot   │
+                    │   (Background)  │
+                    └─────────────────┘
 ```
 
-2. Clone the repository.
+## Development Status
 
-```
-git clone https://github.com/NoguchiShigeki/MyBMO
-```
+### Phase 1: Foundation ✅
+- [x] Discord bot with memory management
+- [x] txtai reference implementation
+- [x] Basic Obsidian plugin structure
 
-3. Run `npm install` to install any necessary dependencies for the plugin.
+### Phase 2: Cleanup and Modularization 🔄
+- [ ] Strip MyBMO dependencies from plugin
+- [ ] Extract brain into standalone module
+- [ ] Update documentation
+- [ ] Create credential bridge
 
-```
-cd MyBMO
-npm install
-```
+### Phase 3: Integration 📋
+- [ ] Smart context management
+- [ ] Brain installer
+- [ ] Chat UI redesign
+- [ ] txtai integration
 
-4. Once the dependencies have been installed, run `npm run build` or `npm run dev` to build the plugin.
+### Phase 4: Enhancement 🚀
+- [ ] Agentic file editing capabilities
+- [ ] Google Calendar/Gmail integration
+- [ ] Advanced RAG features
 
-```
-npm run build
-```
+## Technical Details
 
-```
-npm run dev
-```
-
-5. Once the plugin has been built, it should be ready to activate.
-   Enable: 'Settings' > 'Community plugins' > 'Installed plugins' > 'MyBMO' > 'Enable'.
-
-## Getting Started
-
-To start using the plugin, enable it in your settings menu and insert an API key or REST API URL from a provider. After completing these steps, you can access the bot panel by clicking on the bot icon in the left sidebar.
-
-## Commands
-
--   `/help` - Show help commands.
--   `/model` - List or change model.
-    -   `/model 1` or `/model "llama2"`
-        -   ...
--   `/profile` - List or change profiles.
-    -   `/profile 1` or `/profile [PROFILE-NAME]`
--   `/prompt` - List or change prompts.
-    -   `/prompt 1` or `/prompt [PROMPT-NAME]`
--   `/maxtokens [VALUE]` - Set max tokens.
--   `/temp [VALUE]` - Change temperature range from 0 to 1.
--   `/ref on | off` - Turn on or off reference current note.
--   `/append` - Append current chat history to current active note.
--   `/save` - Save current chat history to a note.
--   `/clear` or `/c` - Clear chat history.
--   `/stop` or `/s` - Stop fetching response.
-
-## Supported Models
-
--   Any self-hosted models using [Ollama](https://ollama.ai).
-    -   See [instructions](https://github.com/longy2k/obsidian-bmo-chatbot/wiki) to setup Ollama with Obsidian.
--   Any self-hosted models using OpenAI's REST API URL endpoints.
-    -   [LM Studio](https://lmstudio.ai/)
-    -   [LocalAI](https://github.com/mudler/LocalAI)
--   Anthropic
-    -   claude-instant-1.2
-    -   claude-2.0
-    -   claude-2.1
-    -   claude-3-haiku-20240307
-    -   claude-3-sonnet-20240229
-    -   claude-3-opus-20240229
--   Mistral AI's models
--   Google Gemini Pro
--   OpenAI
-    -   gpt-3.5-turbo
-    -   gpt-3.5-turbo-1106
-    -   gpt-4
-    -   gpt-4-turbo-preview
-    -   These following models are added in this folk:
-    -   gpt-4-turbo
-    -   gpt-4-turbo-2024-04-09
-    -   gpt-4o
-    -   gpt-4o-2024-05-13
--   Any Openrouter provided models.
-
-## Other Notes
-
-"BMO" is a tag name for this project. Inspired by the character "BMO" from Adventure Time.
-
-Be MOre!
+- **Obsidian Plugin**: TypeScript, Obsidian API
+- **Shared Brain**: Python, SQLite, txtai, sentence-transformers
+- **Discord Bot**: Python, discord.py
+- **RAG Engine**: txtai with local embeddings
+- **Memory**: SQLite with FAISS for similarity search
 
 ## Contributing
 
-Any ideas or support is highly appreciated :)
+This project is in active development. Contributions are welcome!
 
-If you have any bugs, improvements, or questions please create an issue or discussion!
+## License
 
-## Big thanks to Longy2k and the original project! 🎉
+MIT License - see LICENSE file for details.
 
-This link is for Longy2k, he deserves more than a coffee!
+## Acknowledgments
 
-<a href='https://ko-fi.com/K3K8PNYT8' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+- Built on the foundation of MyBMO (original by Longy2k)
+- Uses txtai for RAG capabilities
+- Inspired by the need for intelligent, cross-platform AI assistants

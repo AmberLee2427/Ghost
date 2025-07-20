@@ -1,50 +1,12 @@
 # Project Ghost
 
-We are creating an AI assistant that feels like it haunts your devices. We are piggybacking on existing frameworks. A discord bot for statefullness across devices. Obsidian plugins to leverage existing architecture around chat log storage. Obsidian BMO chat for better workflow integration. At some point, in would be nice to expand to Google Calendar and gmail integration.
+We are creating an AI assistant that feels like it haunts your devices. The system consists of three modular components:
 
-ChatGPT has an export chat log function and there exist Obsidian plugins (e.g. nexus-ai-chat-importer) for converting zipped chat-log archives into markdown records (example in `ref/chatlogs/`).
+1. **Obsidian Plugin** - Settings hub and credential manager
+2. **Shared Brain** - Python-based intelligence with memory and RAG
+3. **Discord Bot** - Communication layer for cross-device statefulness
 
-We will utilize `txtai` (codebase in `ref/txtai/`, for reference) to perform the chat log embeddings (using local models) and RAG, for consistent, cross-platform recall.
-
-The main repo is a clone of MyBMO. An AI chatbot plugin for obsidian. We will be heavily altering it.
-
-The inspiration for the discord bot is in `src/discord/` this is a clone of a repo of mine for a project with two simultaneously run discord bots.
-
-## Development Plan
-
-### Step 1: The path forward
-
-The obsidian chatbot and our bot "brain" should interact modularly. Why?
-
-#### 1. Different Interaction Patterns
-
-* Discord: Real-time, conversational, multi-user, with rich context (mentions, threads, attachments)
-* Obsidian: Note-focused, single-user, document-centric, with markdown rendering
-* These are fundamentally different UX paradigms that benefit from specialized frontends
-
-#### 2. The Discord Bot is Already Sophisticated
-
-The Discord implementation has:
-
-* Advanced memory management with SQLite
-* Chunking and embedding logic
-* Multi-bot personality system
-* Structured reasoning responses
-* Background memory processing
-
-This is a solid foundation that shouldn't be compromised by Obsidian's constraints.
-
-#### 3. Obsidian Plugin Has Different Strengths
-
-The MyBMO plugin excels at:
-
-* Note integration and markdown rendering
-* File system operations
-* Profile/prompt management
-* Chat history as notes
-* Editor commands and workflows
-
-#### Recommended Architecture
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -77,53 +39,84 @@ The MyBMO plugin excels at:
                     └─────────────────┘
 ```
 
-**Key Benefits:**
+## Component Responsibilities
 
-* **Settings Centralization:** All credentials, API keys, system prompts in one Obsidian interface
-* **Smart Context:** No more `/save`/`/load` - just intelligent context management
-* **`txtai` Citations:** Proper RAG with source attribution
-* **Agentic Dreams:** Future file editing capabilities
-* **Clean Separation:** Plugin = UI/Config, Brain = Intelligence, Discord = Communication
+### Obsidian Plugin (TypeScript)
+- **Settings Management**: API keys, Discord tokens, system prompts, model preferences
+- **Credential Storage**: Secure storage of all authentication tokens
+- **Chat UI**: Simple frontend displaying last 20 messages (no `/save`/`/load` commands)
+- **Brain Installer**: Manages installation/updates of Python brain components
+- **File Integration**: Future agentic capabilities for editing current notes
 
-#### Shared Components
+### Shared Brain (Python)
+- **Memory Management**: SQLite database with conversation history and embeddings
+- **RAG System**: Using `txtai` for semantic search with citations
+- **LLM Handler**: Unified interface for OpenAI, Google, and other models
+- **Context Processing**: Intelligent chunking and context management
+- **Reasoning Engine**: Structured responses with internal reasoning
 
-* **Memory Database:** SQLite with your existing schema
-* **Embedding Engine:** `txtai` for RAG capabilities
-* **LLM Handler:** Unified API for different models
-* **Chunking Logic:** Your existing conversation processing
+### Discord Bot (Python)
+- **Communication**: Real-time messaging and cross-device statefulness
+- **Personality System**: Multiple bot personas and triggers
+- **Discord Integration**: Threads, attachments, mentions, reactions
 
-#### Platform-Specific
+## Development Plan
 
-* **Discord:** Real-time messaging, bot personalities, Discord API
-* **Obsidian:** Note integration, markdown rendering, file operations
+### Phase 1: Foundation (Current)
+- [x] Discord bot with memory management (in `src/discord/`)
+- [x] txtai reference implementation (in `ref/txtai/`)
+- [x] Basic Obsidian plugin structure (forked from MyBMO)
 
-This approach gives you:
+### Phase 2: Cleanup and Modularization
+- [ ] **Strip MyBMO**: Remove chat logic from Obsidian plugin, keep only settings UI
+- [ ] **Extract Brain**: Move Discord bot intelligence into standalone Python module
+- [ ] **Update Documentation**: Clean up README and remove MyBMO branding
+- [ ] **Credential Bridge**: Create API for plugin settings to communicate with brain
 
-* **Consistency:** Same memory and reasoning across platforms
-* **Flexibility:** Each frontend optimized for its environment
-* **Maintainability:** Clear separation of concerns
-* **Future-Proofing:** Easy to add new platforms (web UI, mobile, etc.)
+### Phase 3: Integration
+- [ ] **Smart Context**: Replace `/save`/`/load` with intelligent context management
+- [ ] **Brain Installer**: Plugin handles Python dependencies and brain updates
+- [ ] **Chat UI Redesign**: Simple display of last 20 messages with smart context
+- [ ] **txtai Integration**: Implement RAG with citations in brain
 
-### Step 2: Make it make sense
+### Phase 4: Enhancement
+- [ ] **Agentic Capabilities**: File editing and note manipulation
+- [ ] **Google Calendar/Gmail Integration**: Expand cross-platform capabilities
+- [ ] **Advanced RAG**: Enhanced semantic search and memory retrieval
 
-We want to clean up al the documentation and comments to reflect the planned refactorings.
+## Key Design Principles
 
-* Remove all instances of the second bot
-* Move all environment variables to be Obsidian plugin settings.
-* Remove all old repo naming references
-* Re-write documentations such as the README.md, respecting the MyBMO license.
+1. **Modularity**: Each component has a single responsibility
+2. **Smart Context**: No manual context management - intelligence handles it
+3. **Citations**: All RAG responses include source attribution
+4. **Cross-Platform**: Consistent experience across Discord and Obsidian
+5. **Extensible**: Easy to add new platforms (web UI, mobile, etc.)
 
-### Step 3: Implementation
+## Technical Stack
 
-1. **Strip MyBMO:** Remove all the chat logic, keep only settings UI and basic chat display
-2. **Brain Installer:** Plugin handles installing/updating the Python brain components
-3. **Credential Bridge:** Plugin stores settings, brain reads them
-4. **Context API:** Chat UI just displays, brain handles all context management
-5. **Discord Integration:** Plugin can start/stop Discord bot, manage its config
+- **Obsidian Plugin**: TypeScript, Obsidian API
+- **Shared Brain**: Python, SQLite, txtai, sentence-transformers
+- **Discord Bot**: Python, discord.py
+- **RAG Engine**: txtai with local embeddings
+- **Memory**: SQLite with FAISS for similarity search
 
-#### Immediate Next Steps
+## Notes for Future Development
 
-1. **Clean up the plugin:** Remove MyBMO branding and chat logic
-2. **Extract brain components:** Move your Discord bot's intelligence into a standalone module
-3. **Create the bridge:** Simple API between plugin settings and brain
-4. **Implement smart context:** Replace `/save`/`/load` with intelligent context management
+- The current Discord bot in `src/discord/` contains the most advanced implementation
+- The `ref/txtai/` directory contains the reference implementation for RAG capabilities
+- The Obsidian plugin needs significant cleanup to remove MyBMO dependencies
+- Consider using a local API (HTTP or socket) for plugin-brain communication
+- Future: Consider adding web UI and mobile app components
+
+**Planned repo structure/workflow:**
+
+```
+Ghost Repo/
+├── src/                    # Plugin code
+├── brain/                  # Brain package (separate .git)
+│   ├── .git/              # Brain's own git repo
+│   ├── setup.py           # Brain package config
+│   ├── ghost_brain/       # Brain source code
+│   └── requirements.txt   # Python dependencies
+└── README.md 
+```

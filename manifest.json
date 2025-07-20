@@ -1,11 +1,11 @@
 {
-	"id": "my-bmo-chatbot",
-	"name": "My BMO Chatbot",
-	"version": "2.0.0",
+	"id": "ghost-ai",
+	"name": "Ghost AI",
+	"version": "0.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "Generate and brainstorm ideas while creating your notes using Large Language Models (LLMs) from Ollama, LM Studio, Anthropic, OpenAI, Mistral AI, and more for Obsidian.",
-	"author": "NoguchiShigeki (Original: Longy2k)",
-	"authorUrl": "https://github.com/NoguchiShigeki",
+	"description": "An intelligent AI assistant that provides consistent, context-aware interactions across Discord and Obsidian, with local memory management and RAG capabilities.",
+	"author": "Ghost Project Team",
+	"authorUrl": "https://github.com/AmberLee2427",
 	"fundingUrl": "None",
 	"isDesktopOnly": false
 }
