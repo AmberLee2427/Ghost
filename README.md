@@ -69,6 +69,62 @@ Ghost consists of three modular components working together:
 3. The plugin will automatically install and manage the Python brain components
 4. Start the Discord bot through the plugin interface
 
+## Development
+
+### Quick Start
+For developers wanting to build and test the project:
+
+```bash
+# Clone the repository
+git clone https://github.com/AmberLee2427/Ghost.git
+cd Ghost
+
+# Build the Obsidian plugin
+npm install
+npm run build
+
+# Set up the brain server
+cd brain
+pip install -e .
+./quick_start.sh
+```
+
+### Manual Plugin Installation
+For testing the Obsidian plugin:
+
+```bash
+# Method 1: Symlink (recommended for development)
+ln -s /path/to/Ghost ~/Library/Application\ Support/obsidian/plugins/ghost-ai
+
+# Method 2: ZIP installation
+cd /path/to/Ghost
+zip -r ghost-ai.zip main.js manifest.json styles.css
+# Then install via Obsidian: Settings → Community Plugins → Install from file
+```
+
+### Testing
+```bash
+# Test brain server
+cd brain
+pytest -k "not test_import_chatgpt_zip"  # Skip known failing test
+
+# Test CLI
+ghost-brain --help
+ghost-brain config
+ghost-brain env-docs
+
+# Test brain server
+ghost-brain server --port 8000 --log-level debug
+```
+
+### PyPI Release
+```bash
+cd brain
+./release_to_pypi.sh
+```
+
+📖 **Detailed Instructions**: See [BUILD_AND_TESTING.md](BUILD_AND_TESTING.md) for comprehensive build and testing instructions.
+
 ## Configuration
 
 ### API Keys

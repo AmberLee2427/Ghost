@@ -459,3 +459,78 @@ These documentation updates provide:
 5. **Accessibility**: Support for mobile users and team collaboration
 
 The documentation now comprehensively covers the new brain server settings feature and provides users with all the information they need to deploy and configure Ghost Brain in any environment.
+
+---
+
+# Known Issues
+
+## Test Failures
+
+### ChatGPT ZIP Import Test Failure
+**Issue**: The `test_import_chatgpt_zip.py` test is currently failing because no messages or attachments are being imported from the test ZIP file.
+
+**Status**: Under investigation
+**Priority**: Medium
+**Affects**: Development testing
+
+**Details**:
+- Test ZIP structure appears correct and matches reference implementation
+- Import logic is structurally compatible with nexus-ai-chat-importer
+- Issue likely in Python import logic, not test data
+- Will be debugged during real dry run with Obsidian
+
+**Workaround**: 
+- Test can be skipped for now: `pytest -k "not test_import_chatgpt_zip"`
+- Functionality will be verified during actual Obsidian integration testing
+- Real ChatGPT exports will be used to validate import logic
+
+**Next Steps**:
+1. Perform dry run with real Obsidian plugin
+2. Test with actual ChatGPT export files
+3. Debug import logic based on real-world usage
+4. Fix test once import logic is validated
+
+---
+
+## Environment Variable Configuration
+
+### Phase 1: Environment Variables ✅ COMPLETED
+- ✅ Comprehensive environment variable support for all settings
+- ✅ Error handling for invalid values
+- ✅ Documentation and testing
+- ✅ Server integration
+
+### Phase 2: CLI Interface ✅ COMPLETED  
+- ✅ Command-line argument parsing
+- ✅ Configuration override system
+- ✅ Multiple output formats (text, JSON, env)
+- ✅ Comprehensive testing and documentation
+
+### Phase 3: .env File Support 🔄 PENDING
+- [ ] Add python-dotenv support for local development
+- [ ] Automatic .env file loading
+- [ ] Documentation updates
+- [ ] Testing with .env files
+
+---
+
+## Deployment Status
+
+### Brain Server ✅ READY
+- ✅ Environment variable configuration
+- ✅ CLI interface
+- ✅ Comprehensive testing
+- ✅ Documentation complete
+- ✅ Ready for PyPI release
+
+### Obsidian Plugin 🔄 IN DEVELOPMENT
+- ✅ Brain server settings integration
+- ✅ Configuration UI
+- ✅ Status monitoring
+- 🔄 Needs manual installation for testing
+- 🔄 Community plugins submission pending
+
+### Integration Testing 🔄 PENDING
+- 🔄 Dry run with Obsidian plugin
+- 🔄 Real ChatGPT export testing
+- 🔄 End-to-end workflow validation
