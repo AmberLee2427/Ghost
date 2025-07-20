@@ -127,15 +127,15 @@ cd brain
 
 ## Automated Releases
 
-The project uses GitHub Actions for automated releases:
+The brain package uses GitHub Actions for automated releases:
 
 ### Prerequisites
 1. **PyPI API Token**: Create one at [PyPI Account Settings](https://pypi.org/manage/account/)
-2. **GitHub Secret**: Add `PYPI_API_TOKEN` to your repository secrets
+2. **GitHub Secret**: Add `PYPI_API_TOKEN` to the **brain repository** secrets
 
 ### Release Process
 1. Update version in `brain/setup.py`
-2. Commit and push changes
+2. Commit and push changes to the brain repository
 3. Create and push a version tag: `git tag v0.1.2 && git push origin v0.1.2`
 4. GitHub Actions automatically:
    - Runs tests
@@ -195,12 +195,12 @@ The project uses GitHub Actions for automated releases:
 │                    Obsidian Plugin                          │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
 │  │   Settings UI   │  │   Chat UI       │  │  Brain       │ │
-│  │   (Credentials) │  │   (Frontend     │  │  Installer   │ │
-│  │   • API Keys    │  │   Only)         │  │  • txtai     │ │
-│  │   • Discord     │  │   • Last 20     │  │  • Memory    │ │
-│  │   • Brain       │  │   • No /save    │  │  • Discord   │ │
-│  │   • System      │  │   • Smart       │  │  • Bot       │ │
-│  │   • Prompts     │  │   Context       │  └──────────────┘ │
+│  │   (Credentials) │  │   (Frontend     │  │  • txtai     │ │
+│  │   • API Keys    │  │   Only)         │  │  • Memory    │ │
+│  │   • Discord     │  │   • Last 20     │  │  • Discord   │ │
+│  │   • Brain       │  │   • No /save    │  │  • Bot       │ │
+│  │   • System      │  │   • Smart       │  └──────────────┘ │
+│  │   • Prompts     │  │   Context       │                   │
 │  └─────────────────┘  └─────────────────┘                   │
 └─────────────────────────────────────────────────────────────┘
                                 │

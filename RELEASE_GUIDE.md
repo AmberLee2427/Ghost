@@ -4,7 +4,7 @@ This guide explains how to use the automated GitHub Actions workflow to release 
 
 ## Overview
 
-The project uses GitHub Actions to automatically:
+The brain package uses GitHub Actions to automatically:
 - **Test** code on every push and pull request
 - **Release to PyPI** when you create a version tag for the brain package
 
@@ -20,7 +20,7 @@ You need to create a PyPI API token and add it to GitHub secrets:
 5. Copy the token (starts with `pypi-`)
 
 ### 2. Add GitHub Secret
-1. Go to your GitHub repository
+1. Go to the **brain repository** (not the main Ghost repository)
 2. Click "Settings" → "Secrets and variables" → "Actions"
 3. Click "New repository secret"
 4. Name: `PYPI_API_TOKEN`
@@ -29,7 +29,7 @@ You need to create a PyPI API token and add it to GitHub secrets:
 ## Release Process
 
 ### Step 1: Update Version
-Update the version in `brain/setup.py`:
+Update the version in `setup.py`:
 
 ```python
 setup(
@@ -58,7 +58,7 @@ The tag push will automatically trigger:
 1. **Test workflow** - Runs all tests
 2. **Release workflow** - Builds and uploads brain package to PyPI
 
-You can monitor progress at: `https://github.com/your-repo/actions`
+You can monitor progress at: `https://github.com/your-brain-repo/actions`
 
 ## Workflow Details
 
@@ -92,7 +92,6 @@ If the automated workflow fails, you can release manually:
 
 ```bash
 # Build and upload to PyPI
-cd brain
 python setup.py sdist bdist_wheel
 twine upload dist/*
 
@@ -139,7 +138,7 @@ Use semantic versioning: `MAJOR.MINOR.PATCH`
 4. ✅ Changelog updated (if applicable)
 
 ### Release Checklist
-- [ ] Update version in `brain/setup.py`
+- [ ] Update version in `setup.py`
 - [ ] Commit all changes
 - [ ] Push to main branch
 - [ ] Create and push version tag
