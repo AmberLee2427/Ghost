@@ -7,13 +7,15 @@ import BMOGPT, { BMOSettings } from 'src/main';
 const execAsync = promisify(exec);
 
 export interface PythonEnvironmentStatus {
+    pythonInstalled: boolean;
+    pythonVersion?: string;
     miniforgeInstalled: boolean;
     brainEnvironmentExists: boolean;
     brainPackageInstalled: boolean;
     brainServerRunning: boolean;
-    pythonVersion?: string;
     condaVersion?: string;
     brainVersion?: string;
+    usingSystemPython: boolean;
 }
 
 export interface InstallationProgress {
@@ -29,6 +31,7 @@ export class PythonEnvironmentManager {
     private baseDir: string;
     private miniforgeDir: string;
     private brainEnvName = 'ghost-brain';
+    private usingSystemPython = false;
 
     constructor(plugin: BMOGPT, settings: BMOSettings) {
         this.plugin = plugin;
@@ -42,20 +45,26 @@ export class PythonEnvironmentManager {
      */
     async getStatus(): Promise<PythonEnvironmentStatus> {
         const status: PythonEnvironmentStatus = {
+            pythonInstalled: false,
             miniforgeInstalled: false,
             brainEnvironmentExists: false,
             brainPackageInstalled: false,
-            brainServerRunning: false
+            brainServerRunning: false,
+            usingSystemPython: false
         };
 
         try {
+            // First check for existing Python installation
+            status.pythonInstalled = await this.checkSystemPython();
+            if (status.pythonInstalled) {
+                status.pythonVersion = await this.getSystemPythonVersion();
+                status.usingSystemPython = true;
+            }
+            
             // Check if miniforge is installed
             status.miniforgeInstalled = await this.checkMiniforgeInstalled();
             
             if (status.miniforgeInstalled) {
-                // Check Python version
-                status.pythonVersion = await this.getPythonVersion();
-                
                 // Check conda version
                 status.condaVersion = await this.getCondaVersion();
                 
@@ -89,6 +98,32 @@ export class PythonEnvironmentManager {
         onProgress?: (progress: InstallationProgress) => void
     ): Promise<boolean> {
         try {
+            // Step 0: Check for existing Python
+            onProgress?.({
+                step: 'check',
+                progress: 5,
+                message: 'Checking for existing Python installation...'
+            });
+
+            const hasSystemPython = await this.checkSystemPython();
+            if (hasSystemPython) {
+                const pythonVersion = await this.getSystemPythonVersion();
+                console.log(`Found system Python: ${pythonVersion}`);
+                
+                // Check if system Python version is compatible
+                if (this.isPythonVersionCompatible(pythonVersion)) {
+                    this.usingSystemPython = true;
+                    onProgress?.({
+                        step: 'system_python',
+                        progress: 15,
+                        message: `Using existing Python: ${pythonVersion}`
+                    });
+                    
+                    // Skip Miniforge installation and go straight to brain setup
+                    return await this.setupBrainWithSystemPython(onProgress);
+                }
+            }
+
             // Step 1: Install miniforge
             onProgress?.({
                 step: 'miniforge',
@@ -153,6 +188,60 @@ export class PythonEnvironmentManager {
     }
 
     /**
+     * Setup brain using existing system Python
+     */
+    private async setupBrainWithSystemPython(
+        onProgress?: (progress: InstallationProgress) => void
+    ): Promise<boolean> {
+        try {
+            // Step 1: Create virtual environment
+            onProgress?.({
+                step: 'venv',
+                progress: 25,
+                message: 'Creating virtual environment...'
+            });
+
+            if (!(await this.createVirtualEnvironment())) {
+                throw new Error('Failed to create virtual environment');
+            }
+
+            // Step 2: Install brain package
+            onProgress?.({
+                step: 'brain',
+                progress: 60,
+                message: 'Installing brain package...'
+            });
+
+            if (!(await this.installBrainPackageWithSystemPython())) {
+                throw new Error('Failed to install brain package');
+            }
+
+            // Step 3: Verify installation
+            onProgress?.({
+                step: 'verify',
+                progress: 90,
+                message: 'Verifying installation...'
+            });
+
+            const status = await this.getStatus();
+            if (!status.brainPackageInstalled) {
+                throw new Error('Brain package installation verification failed');
+            }
+
+            onProgress?.({
+                step: 'complete',
+                progress: 100,
+                message: 'Installation complete!'
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error setting up brain with system Python:', error);
+            return false;
+        }
+    }
+
+    /**
      * Start the brain server
      */
     async startBrainServer(): Promise<boolean> {
@@ -164,7 +253,18 @@ export class PythonEnvironmentManager {
 
             // Start brain server in background
             const brainDir = path.join(this.baseDir, 'brain');
-            const command = `cd "${brainDir}" && conda run -n ${this.brainEnvName} python -m ghost_brain.server`;
+            let command: string;
+            
+            if (this.usingSystemPython) {
+                const venvPath = path.join(this.baseDir, 'venv');
+                const pythonPath = process.platform === 'win32' 
+                    ? path.join(venvPath, 'Scripts', 'python.exe')
+                    : path.join(venvPath, 'bin', 'python');
+                command = `cd "${brainDir}" && "${pythonPath}" -m ghost_brain.server`;
+            } else {
+                const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
+                command = `cd "${brainDir}" && "${condaPath}" run -n ${this.brainEnvName} python -m ghost_brain.server`;
+            }
             
             // Use platform-specific command
             const platformCommand = process.platform === 'win32' 
@@ -198,6 +298,104 @@ export class PythonEnvironmentManager {
             return true;
         } catch (error) {
             console.error('Error stopping brain server:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Check if system Python is available
+     */
+    private async checkSystemPython(): Promise<boolean> {
+        try {
+            await execAsync('python --version');
+            return true;
+        } catch {
+            try {
+                await execAsync('python3 --version');
+                return true;
+            } catch {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Get system Python version
+     */
+    private async getSystemPythonVersion(): Promise<string> {
+        try {
+            const { stdout } = await execAsync('python --version');
+            return stdout.trim();
+        } catch {
+            try {
+                const { stdout } = await execAsync('python3 --version');
+                return stdout.trim();
+            } catch {
+                return 'Unknown';
+            }
+        }
+    }
+
+    /**
+     * Check if Python version is compatible (3.11+)
+     */
+    private isPythonVersionCompatible(version: string): boolean {
+        const match = version.match(/Python (\d+)\.(\d+)/);
+        if (match) {
+            const major = parseInt(match[1]);
+            const minor = parseInt(match[2]);
+            return major === 3 && minor >= 11;
+        }
+        return false;
+    }
+
+    /**
+     * Create virtual environment using system Python
+     */
+    private async createVirtualEnvironment(): Promise<boolean> {
+        try {
+            const venvPath = path.join(this.baseDir, 'venv');
+            const pythonCommand = await this.getSystemPythonCommand();
+            await execAsync(`${pythonCommand} -m venv "${venvPath}"`);
+            return true;
+        } catch (error) {
+            console.error('Error creating virtual environment:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Get the appropriate Python command for the system
+     */
+    private async getSystemPythonCommand(): Promise<string> {
+        try {
+            await execAsync('python --version');
+            return 'python';
+        } catch {
+            return 'python3';
+        }
+    }
+
+    /**
+     * Install brain package using system Python
+     */
+    private async installBrainPackageWithSystemPython(): Promise<boolean> {
+        try {
+            const venvPath = path.join(this.baseDir, 'venv');
+            const pipPath = process.platform === 'win32' 
+                ? path.join(venvPath, 'Scripts', 'pip.exe')
+                : path.join(venvPath, 'bin', 'pip');
+            const brainDir = path.join(this.baseDir, 'brain');
+            
+            // Install dependencies
+            await execAsync(`"${pipPath}" install -r "${path.join(brainDir, 'requirements.txt')}"`);
+            
+            // Install brain package in editable mode
+            await execAsync(`"${pipPath}" install -e "${brainDir}"`);
+            
+            return true;
+        } catch (error) {
+            console.error('Error installing brain package with system Python:', error);
             return false;
         }
     }
@@ -315,8 +513,16 @@ export class PythonEnvironmentManager {
      */
     private async checkBrainPackageInstalled(): Promise<boolean> {
         try {
-            const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
-            await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python -c "import ghost_brain"`);
+            if (this.usingSystemPython) {
+                const venvPath = path.join(this.baseDir, 'venv');
+                const pythonPath = process.platform === 'win32' 
+                    ? path.join(venvPath, 'Scripts', 'python.exe')
+                    : path.join(venvPath, 'bin', 'python');
+                await execAsync(`"${pythonPath}" -c "import ghost_brain"`);
+            } else {
+                const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
+                await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python -c "import ghost_brain"`);
+            }
             return true;
         } catch {
             return false;
@@ -340,9 +546,13 @@ export class PythonEnvironmentManager {
      */
     private async getPythonVersion(): Promise<string> {
         try {
-            const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
-            const { stdout } = await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python --version`);
-            return stdout.trim();
+            if (this.usingSystemPython) {
+                return await this.getSystemPythonVersion();
+            } else {
+                const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
+                const { stdout } = await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python --version`);
+                return stdout.trim();
+            }
         } catch {
             return 'Unknown';
         }
@@ -366,9 +576,18 @@ export class PythonEnvironmentManager {
      */
     private async getBrainVersion(): Promise<string> {
         try {
-            const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
-            const { stdout } = await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python -c "import ghost_brain; print(ghost_brain.__version__)"`);
-            return stdout.trim();
+            if (this.usingSystemPython) {
+                const venvPath = path.join(this.baseDir, 'venv');
+                const pythonPath = process.platform === 'win32' 
+                    ? path.join(venvPath, 'Scripts', 'python.exe')
+                    : path.join(venvPath, 'bin', 'python');
+                const { stdout } = await execAsync(`"${pythonPath}" -c "import ghost_brain; print(ghost_brain.__version__)"`);
+                return stdout.trim();
+            } else {
+                const condaPath = path.join(this.miniforgeDir, 'bin', 'conda');
+                const { stdout } = await execAsync(`"${condaPath}" run -n ${this.brainEnvName} python -c "import ghost_brain; print(ghost_brain.__version__)"`);
+                return stdout.trim();
+            }
         } catch {
             return 'Unknown';
         }

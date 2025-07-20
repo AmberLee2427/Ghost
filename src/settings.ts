@@ -12,6 +12,7 @@ import { addProfileSettings } from "./components/settings/ProfileSettings";
 import { addRESTAPIURLSettings } from "./components/settings/RESTAPIURLSettings";
 import { addEditorSettings } from "./components/settings/EditorSettings";
 import { addPromptSettings } from "./components/settings/PromptSettings";
+import { addBrainServerSettings } from "./components/settings/BrainServerSettings";
 
 export class BMOSettingTab extends PluginSettingTab {
 	plugin: BMOGPT;
@@ -48,6 +49,7 @@ export class BMOSettingTab extends PluginSettingTab {
 		addAppearanceSettings(this.containerEl, this.plugin, this);
 		addChatHistorySettings(this.containerEl, this.plugin, this);
 		addEditorSettings(this.containerEl, this.plugin, this);
+		addBrainServerSettings(this.containerEl, this.plugin, this.plugin.settings);
 
 		addHorizontalRule(this.containerEl);
 

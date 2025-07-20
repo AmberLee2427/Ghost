@@ -27,12 +27,22 @@ export class BrainIntegration {
     constructor(plugin: BMOGPT, settings: BMOSettings) {
         this.plugin = plugin;
         this.settings = settings;
-        // Default brain URL - can be made configurable later
-        this.brainUrl = 'http://localhost:8000';
+        this.brainUrl = this.getBrainUrl();
+    }
+
+    private getBrainUrl(): string {
+        if (this.settings.brainServer.useCustomBrainServer) {
+            return this.settings.brainServer.brainServerUrl;
+        } else {
+            return `http://localhost:${this.settings.brainServer.brainServerPort}`;
+        }
     }
 
     async initialize(): Promise<boolean> {
         try {
+            // Update brain URL in case settings changed
+            this.brainUrl = this.getBrainUrl();
+            
             // Test brain connectivity
             const response = await fetch(`${this.brainUrl}/health`, {
                 method: 'GET',
@@ -43,14 +53,14 @@ export class BrainIntegration {
 
             if (response.ok) {
                 this.isInitialized = true;
-                console.log('Brain integration initialized successfully');
+                console.log(`Brain integration initialized successfully at ${this.brainUrl}`);
                 return true;
             } else {
-                console.warn('Brain not available, falling back to local mode');
+                console.warn(`Brain not available at ${this.brainUrl}, falling back to local mode`);
                 return false;
             }
         } catch (error) {
-            console.warn('Brain not available, falling back to local mode:', error);
+            console.warn(`Brain not available at ${this.brainUrl}, falling back to local mode:`, error);
             return false;
         }
     }

@@ -438,7 +438,7 @@ async def process_and_store_memory(
             "content": response_to_send_discord,
             "author_id": bot_user_id,
             "timestamp": datetime.datetime.now().isoformat(), # Use current time for response
-            "message_id": message_id + "_bot_response" # A unique ID for this bot response
+            "message_id": f"discord_{message_id}_bot_response" # A unique ID for this bot response
         }
         logger(f"DEBUG: current_bot_message_for_chunking constructed.")
 

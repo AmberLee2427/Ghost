@@ -136,6 +136,13 @@ export class MessageManager {
         return this.brainIntegration.isAvailable();
     }
 
+    async refreshBrainIntegration(): Promise<void> {
+        // Recreate brain integration with updated settings
+        this.brainIntegration = new BrainIntegration(this.plugin, this.settings);
+        await this.brainIntegration.initialize();
+        console.log(`Brain integration refreshed. Available: ${this.brainIntegration.isAvailable()}`);
+    }
+
     private trimToMaxMessages(): void {
         if (this.messageHistory.length > this.maxMessages) {
             // Keep the most recent messages

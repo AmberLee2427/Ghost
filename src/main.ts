@@ -7,7 +7,7 @@ import {
 } from "./components/editor/EditorCommands";
 import { colorToHex, isValidHexColor } from "./utils/ColorConverter";
 
-export interface BMOSettings {
+export interface GhostSettings {
 	profiles: {
 		profile: string;
 		profileFolderPath: string;
@@ -44,6 +44,12 @@ export interface BMOSettings {
 		chatHistoryPath: string;
 		templateFilePath: string;
 		allowRenameNoteTitle: boolean;
+	};
+	brainServer: {
+		useCustomBrainServer: boolean;
+		brainServerUrl: string;
+		brainServerPort: number;
+		chatHistoryPath: string;
 	};
 	OllamaConnection: {
 		RESTAPIURL: string;
@@ -113,13 +119,14 @@ export interface BMOSettings {
 	toggleOpenRouterSettings: boolean;
 	toggleOllamaSettings: boolean;
 	toggleAdvancedSettings: boolean;
+	toggleBrainServerSettings: boolean;
 	allModels: string[];
 }
 
-export const DEFAULT_SETTINGS: BMOSettings = {
+export const DEFAULT_SETTINGS: GhostSettings = {
 	profiles: {
-		profile: "BMO.md",
-		profileFolderPath: "BMO/Profiles",
+		profile: "Ghost.md",
+		profileFolderPath: "Ghost/Profiles",
 	},
 	general: {
 		model: "",
@@ -131,7 +138,7 @@ export const DEFAULT_SETTINGS: BMOSettings = {
 	},
 	appearance: {
 		userName: "USER",
-		chatbotName: "BMO",
+		chatbotName: "Ghost",
 		chatbotContainerBackgroundColor: "--background-secondary",
 		messageContainerBackgroundColor: "--background-secondary",
 		userMessageFontColor: "--text-normal",
@@ -144,15 +151,21 @@ export const DEFAULT_SETTINGS: BMOSettings = {
 	},
 	prompts: {
 		prompt: "",
-		promptFolderPath: "BMO/Prompts",
+		promptFolderPath: "Ghost/Prompts",
 	},
 	editor: {
 		prompt_select_generate_system_role: "Output user request.",
 	},
 	chatHistory: {
-		chatHistoryPath: "BMO/History",
+		chatHistoryPath: "Ghost/History",
 		templateFilePath: "",
 		allowRenameNoteTitle: false,
+	},
+	brainServer: {
+		useCustomBrainServer: false,
+		brainServerUrl: "http://localhost",
+		brainServerPort: 8000,
+		chatHistoryPath: "Ghost/History",
 	},
 	OllamaConnection: {
 		RESTAPIURL: "",
@@ -222,13 +235,14 @@ export const DEFAULT_SETTINGS: BMOSettings = {
 	toggleOpenRouterSettings: false,
 	toggleOllamaSettings: true,
 	toggleAdvancedSettings: false,
+	toggleBrainServerSettings: false,
 	allModels: [],
 };
 
 export let checkActiveFile: TFile | null = null;
 
-export default class BMOGPT extends Plugin {
-	settings: BMOSettings;
+export default class GhostGPT extends Plugin {
+	settings: GhostSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -528,7 +542,7 @@ export default class BMOGPT extends Plugin {
 	}
 }
 
-export async function defaultFrontMatter(plugin: BMOGPT, file: TFile) {
+export async function defaultFrontMatter(plugin: GhostGPT, file: TFile) {
 	// Define a callback function to modify the frontmatter
 	const setDefaultFrontMatter = async (frontmatter: any) => {
 		// Add or modify properties in the frontmatter
@@ -637,7 +651,7 @@ export async function defaultFrontMatter(plugin: BMOGPT, file: TFile) {
 }
 
 export async function updateSettingsFromFrontMatter(
-	plugin: BMOGPT,
+	plugin: GhostGPT,
 	file: TFile,
 ) {
 	// Define a callback function to modify the frontmatter
@@ -721,7 +735,7 @@ export async function updateSettingsFromFrontMatter(
 	}
 }
 
-export async function updateFrontMatter(plugin: BMOGPT, file: TFile) {
+export async function updateFrontMatter(plugin: GhostGPT, file: TFile) {
 	// Define a callback function to modify the frontmatter
 	const modifyFrontMatter = async (frontmatter: any) => {
 		// Add or modify properties in the frontmatter
@@ -825,7 +839,7 @@ export async function updateFrontMatter(plugin: BMOGPT, file: TFile) {
 	}
 }
 
-export async function updateProfile(plugin: BMOGPT, file: TFile) {
+export async function updateProfile(plugin: GhostGPT, file: TFile) {
 	try {
 		await plugin.app.fileManager.processFrontMatter(
 			file,

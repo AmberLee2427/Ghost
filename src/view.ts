@@ -143,12 +143,29 @@ export class BMOView extends ItemView {
 			},
 		});
 
+		// Add brain status indicator
+		const brainSpanElement = chatbotContainer.createEl("span", {
+			attr: {
+				class: "dotIndicator",
+				id: "brainStatusIndicator",
+			},
+		});
+
+		const brainStatusElement = chatbotContainer.createEl("p", {
+			text: "Brain Server",
+			attr: {
+				id: "brainStatus",
+			},
+		});
+
 		header.appendChild(chatbotNameHeading);
 		header.appendChild(modelName);
 
 		referenceCurrentNoteElement.appendChild(spanElement);
+		brainStatusElement.appendChild(brainSpanElement);
 
 		referenceCurrentNoteElement.style.display = "none";
+		brainStatusElement.style.display = "none";
 
 		if (referenceCurrentNoteElement) {
 			if (this.settings.general.allowReferenceCurrentNote) {
@@ -156,6 +173,15 @@ export class BMOView extends ItemView {
 			} else {
 				referenceCurrentNoteElement.style.display = "none";
 			}
+		}
+
+		// Show brain status if brain integration is enabled
+		if (this.settings.general.allowReferenceCurrentNote) {
+			brainStatusElement.style.display = "block";
+			this.updateBrainStatusIndicator();
+			this.startBrainStatusChecks();
+		} else {
+			brainStatusElement.style.display = "none";
 		}
 
 		const messageContainer = chatbotContainer.createEl("div", {
@@ -365,6 +391,42 @@ export class BMOView extends ItemView {
 
 	cleanup() {
 		// Cleanup logic if needed
+	}
+
+	/**
+	 * Update the brain status indicator
+	 */
+	async updateBrainStatusIndicator(): Promise<void> {
+		const brainIndicator = document.querySelector("#brainStatusIndicator") as HTMLElement;
+		if (!brainIndicator) return;
+
+		try {
+			// Check if brain server is running
+			const response = await fetch('http://localhost:8000/health');
+			if (response.ok) {
+				// Green dot for brain server running
+				brainIndicator.style.backgroundColor = "#4CAF50";
+				brainIndicator.title = "Brain server is running and available";
+			} else {
+				// Yellow dot for brain server responding but not healthy
+				brainIndicator.style.backgroundColor = "#FF9800";
+				brainIndicator.title = "Brain server responding but not healthy";
+			}
+		} catch (error) {
+			// Red dot for brain server not available
+			brainIndicator.style.backgroundColor = "#F44336";
+			brainIndicator.title = "Brain server not available";
+		}
+	}
+
+	/**
+	 * Start periodic brain status checks
+	 */
+	startBrainStatusChecks(): void {
+		// Check brain status every 30 seconds
+		setInterval(() => {
+			this.updateBrainStatusIndicator();
+		}, 30000);
 	}
 
 	async BMOchatbot() {

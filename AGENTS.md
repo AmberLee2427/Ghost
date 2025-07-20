@@ -160,3 +160,302 @@ We are creating an AI assistant that feels like it haunts your devices. The syst
 2. Resolve message_id requirement in memory storage
 3. Add better error handling for missing API keys
 4. Consider adding a "mock" mode for testing without API keys
+
+# Brain Server Settings Feature
+
+## Overview
+
+The Obsidian plugin now supports configurable brain server connections, allowing users to connect to brain servers running anywhere - locally, on remote desktops, in the cloud, or shared team servers.
+
+## Features
+
+### ✅ Configurable Brain Server URL
+- **Local Mode**: Connect to brain server on localhost with configurable port (default: 8000)
+- **Custom Mode**: Connect to any brain server URL (cloud, remote desktop, team server, etc.)
+
+### ✅ Settings UI
+- Toggle between local and custom brain server
+- URL input field for custom brain servers
+- Port configuration for local brain servers
+- Real-time status indicator with connection testing
+- Helpful tips and examples
+
+### ✅ Mobile Support
+- Connect mobile Obsidian to desktop brain server
+- Use desktop IP address in mobile settings
+- No need to install Python on mobile devices
+
+### ✅ Team/Cloud Support
+- Share one brain server across multiple devices/users
+- Deploy brain to cloud services (Railway, Heroku, etc.)
+- Centralized memory and processing
+
+## Settings Configuration
+
+### Local Brain Server (Default)
+```typescript
+brainServer: {
+    useCustomBrainServer: false,
+    brainServerUrl: "http://localhost",
+    brainServerPort: 8000,
+}
+```
+
+### Custom Brain Server
+```typescript
+brainServer: {
+    useCustomBrainServer: true,
+    brainServerUrl: "https://my-brain.railway.app",
+    brainServerPort: 8000, // Not used in custom mode
+}
+```
+
+## Use Cases
+
+### 🏠 Desktop Users
+- Default localhost:8000 configuration
+- No changes needed
+- Brain server runs on same machine
+
+### 📱 Mobile Users
+1. Install brain on desktop: `python -m pip install ghost-brain`
+2. Start brain server: `python -m ghost_brain.server`
+3. Find desktop IP: `ifconfig` (Mac/Linux) or `ipconfig` (Windows)
+4. In mobile Obsidian settings, use: `http://YOUR_DESKTOP_IP:8000`
+
+### ☁️ Cloud Deployment
+1. Deploy brain to Railway/Heroku/etc.
+2. Get your deployment URL
+3. In Obsidian settings, use: `https://your-deployment-url.com`
+
+### 👥 Team Sharing
+1. Deploy brain to shared server
+2. Configure authentication if needed
+3. Share URL with team members
+4. Each member uses same URL in their Obsidian settings
+
+## Implementation Details
+
+### Files Modified
+- `src/main.ts`: Added brain server settings to BMOSettings interface
+- `src/components/brain/BrainIntegration.ts`: Updated to use configurable URL
+- `src/components/settings/BrainServerSettings.ts`: New settings UI component
+- `src/settings.ts`: Integrated brain server settings into main settings
+- `src/components/brain/MessageManager.ts`: Added refresh method for settings changes
+
+### Key Components
+
+#### BrainIntegration
+```typescript
+private getBrainUrl(): string {
+    if (this.settings.brainServer.useCustomBrainServer) {
+        return this.settings.brainServer.brainServerUrl;
+    } else {
+        return `http://localhost:${this.settings.brainServer.brainServerPort}`;
+    }
+}
+```
+
+#### Settings UI
+- Toggle for custom brain server
+- URL input field (shown when custom mode enabled)
+- Port input field (shown when local mode enabled)
+- Real-time status indicator
+- Helpful tips and examples
+
+#### Status Indicator
+- Green: Brain server connected and responding
+- Red: Cannot connect to brain server
+- Auto-refreshes every 30 seconds
+- Manual refresh button available
+
+## Testing
+
+Run the test script to verify brain server connectivity:
+```bash
+python test_brain_server_settings.py
+```
+
+This tests:
+- Local brain server connectivity
+- Example custom URLs (for demonstration)
+- Provides configuration examples
+
+## Notes
+
+- **Settings Changes**: After changing brain server settings, reopen the chat view for changes to take effect
+- **Security**: Custom brain servers should implement appropriate authentication for production use
+- **Performance**: Remote brain servers may have higher latency than local ones
+- **Reliability**: Ensure brain server is always running for consistent functionality
+
+## Future Enhancements
+
+- [ ] Automatic brain server discovery on local network
+- [ ] Brain server authentication support
+- [ ] Connection pooling for better performance
+- [ ] Offline mode with local fallback
+- [ ] Brain server health monitoring dashboard
+
+# Documentation Updates Summary
+
+## Overview
+
+This document summarizes all the documentation updates made to support the new **Brain Server Settings** feature, which allows users to configure brain server connections for local, remote, cloud, and team deployments.
+
+## Files Updated
+
+### 1. Main README.md
+**Location**: `/README.md`
+
+**Key Updates**:
+- ✅ Added "Configurable Brain Server" and "Mobile Support" to Obsidian Integration features
+- ✅ Added "Flexible Deployment" to Shared Intelligence features
+- ✅ Added new "Brain Server Settings" configuration section
+- ✅ Added "Mobile Setup" and "Cloud Deployment" usage sections
+- ✅ Updated architecture diagram to include "Brain" settings and "HTTP API"
+- ✅ Updated development status to mark Phase 2 and 3 as complete
+- ✅ Added brain server authentication and discovery to Phase 4
+- ✅ Added "Brain Server: FastAPI with configurable endpoints" to technical details
+
+### 2. Brain README.md
+**Location**: `/brain/README.md`
+
+**Key Updates**:
+- ✅ Added "Flexible Deployment" and "Mobile Support" to features
+- ✅ Added comprehensive "Deployment Options" section with:
+  - Local Development
+  - Remote Desktop (for mobile users)
+  - Cloud Deployment
+  - Team Sharing
+- ✅ Added "Configuration" section with brain server settings
+- ✅ Added TypeScript interface for brain server settings
+- ✅ Added "Use Cases" section for different user types
+- ✅ Added testing section with relevant test commands
+- ✅ Updated architecture to include "Settings Manager"
+
+### 3. Brain Installation Guide
+**Location**: `/brain/INSTALLATION.md`
+
+**Key Updates**:
+- ✅ Updated overview to mention deployment scenarios
+- ✅ Added "Configure Brain Server" step to automatic installation
+- ✅ Added comprehensive "Deployment Scenarios" section
+- ✅ Added "Brain Server Settings" configuration section with TypeScript examples
+- ✅ Updated installation steps to reference "Brain Server Settings" tab
+
+### 4. Brain Server Settings Documentation
+**Location**: `/BRAIN_SERVER_SETTINGS.md`
+
+**New File Created**:
+- ✅ Complete feature documentation
+- ✅ Implementation details
+- ✅ Use cases and examples
+- ✅ Configuration options
+- ✅ Testing instructions
+- ✅ Future enhancements roadmap
+
+## Key Features Documented
+
+### 🏠 Desktop Users
+- Default localhost:8000 configuration
+- No changes needed
+- Brain server runs on same machine
+
+### 📱 Mobile Users
+- Install brain on desktop
+- Use desktop IP address in mobile settings
+- No Python installation needed on mobile
+- Step-by-step setup instructions
+
+### ☁️ Cloud Deployment
+- Deploy to Railway, Heroku, etc.
+- Get deployment URL
+- Use in Obsidian settings
+- Team sharing capabilities
+
+### 👥 Team Sharing
+- Deploy brain to shared server
+- Configure authentication if needed
+- Share URL with team members
+- Centralized memory and processing
+
+## Technical Details Documented
+
+### Settings Interface
+```typescript
+brainServer: {
+    useCustomBrainServer: boolean;
+    brainServerUrl: string;
+    brainServerPort: number;
+}
+```
+
+### Configuration Modes
+- **Local Mode**: Default localhost:8000 configuration
+- **Custom Mode**: Connect to any brain server URL
+- **Port Configuration**: Customize local brain server port
+- **Status Monitoring**: Real-time connection health checks
+
+### API Endpoints
+- `POST /chat` - Process a chat message
+- `GET /health` - Health check
+- `POST /memory/search` - Search memory
+- `GET /memory/stats` - Get memory statistics
+- `GET /settings` - Get current settings
+- `POST /settings` - Update settings
+
+## User Experience Improvements
+
+### Settings UI Features
+- ✅ Toggle between local and custom brain server
+- ✅ URL input field for custom brain servers
+- ✅ Port configuration for local brain servers
+- ✅ Real-time status indicator with connection testing
+- ✅ Helpful tips and examples
+- ✅ Warning note about reopening chat view
+
+### Status Monitoring
+- ✅ Green: Brain server connected and responding
+- ✅ Red: Cannot connect to brain server
+- ✅ Auto-refreshes every 30 seconds
+- ✅ Manual refresh button available
+
+## Testing Documentation
+
+### Test Commands
+```bash
+# Test brain server connectivity
+python test_brain_server.py
+
+# Test Obsidian integration
+python test_obsidian_integration.py
+
+# Test settings integration
+python test_settings_integration.py
+```
+
+### Verification Steps
+- ✅ Check brain package installation
+- ✅ Verify brain version
+- ✅ Test health endpoint
+- ✅ Run comprehensive test suite
+
+## Future Enhancements Documented
+
+- [ ] Automatic brain server discovery on local network
+- [ ] Brain server authentication support
+- [ ] Connection pooling for better performance
+- [ ] Offline mode with local fallback
+- [ ] Brain server health monitoring dashboard
+
+## Impact
+
+These documentation updates provide:
+
+1. **Complete User Guidance**: Step-by-step instructions for all deployment scenarios
+2. **Technical Reference**: Detailed configuration options and API documentation
+3. **Troubleshooting Support**: Common issues and solutions
+4. **Future Roadmap**: Clear direction for upcoming features
+5. **Accessibility**: Support for mobile users and team collaboration
+
+The documentation now comprehensively covers the new brain server settings feature and provides users with all the information they need to deploy and configure Ghost Brain in any environment.
