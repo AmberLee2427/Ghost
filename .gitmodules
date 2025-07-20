@@ -1,0 +1,3 @@
+[submodule "brain"]
+	path = brain
+	url = https://github.com/AmberLee2427/ghost-brain.git
