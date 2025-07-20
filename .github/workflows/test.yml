@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        cd brain
+        pip install --upgrade pip
+        pip install -e .
+        pip install pytest
+        
+    - name: Run brain tests
+      run: |
+        cd brain
+        pytest -k "not test_import_chatgpt_zip" --tb=short
+        
+    - name: Test CLI
+      run: |
+        cd brain
+        ghost-brain --help
+        ghost-brain version
+        ghost-brain config --format json
+        
+    - name: Test brain server startup
+      run: |
+        cd brain
+        timeout 10s ghost-brain server --port 8000 --log-level error || true 

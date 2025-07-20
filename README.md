@@ -125,6 +125,25 @@ cd brain
 
 📖 **Detailed Instructions**: See [BUILD_AND_TESTING.md](BUILD_AND_TESTING.md) for comprehensive build and testing instructions.
 
+## Automated Releases
+
+The project uses GitHub Actions for automated releases:
+
+### Prerequisites
+1. **PyPI API Token**: Create one at [PyPI Account Settings](https://pypi.org/manage/account/)
+2. **GitHub Secret**: Add `PYPI_API_TOKEN` to your repository secrets
+
+### Release Process
+1. Update version in `brain/setup.py`
+2. Commit and push changes
+3. Create and push a version tag: `git tag v0.1.2 && git push origin v0.1.2`
+4. GitHub Actions automatically:
+   - Runs tests
+   - Builds and uploads brain package to PyPI
+   - Verifies installation
+
+📖 **Complete Guide**: See [RELEASE_GUIDE.md](RELEASE_GUIDE.md) for detailed release instructions.
+
 ## Configuration
 
 ### API Keys

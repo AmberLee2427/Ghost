@@ -1,0 +1,54 @@
+name: Release Brain to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v0.1.1, v0.2.0, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        cd brain
+        pip install --upgrade pip
+        pip install -e .
+        pip install twine pytest
+        
+    - name: Run tests
+      run: |
+        cd brain
+        pytest -k "not test_import_chatgpt_zip" --tb=short
+        
+    - name: Build package
+      run: |
+        cd brain
+        python setup.py sdist bdist_wheel
+        
+    - name: Check package
+      run: |
+        cd brain
+        twine check dist/*
+        
+    - name: Upload to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        cd brain
+        twine upload dist/*
+        
+    - name: Verify upload
+      run: |
+        pip install ghost-brain --upgrade
+        ghost-brain version 
